@@ -46,9 +46,12 @@ export function MiniTimer() {
           return
         }
         pipWin.current = win
+        const siteFont =
+          getComputedStyle(document.documentElement).getPropertyValue('--font-body').trim() ||
+          'Manrope, system-ui, sans-serif'
         win.document.body.innerHTML = `
           <style>
-            html,body{margin:0;height:100%;background:#0f1c1c;color:#f4f1ea;font-family:Manrope,system-ui,sans-serif;display:grid;place-items:center}
+            html,body{margin:0;height:100%;background:#0f1c1c;color:#f4f1ea;font-family:${siteFont};display:grid;place-items:center}
             .t{font-size:42px;font-weight:700;letter-spacing:-0.03em;font-variant-numeric:tabular-nums}
             .s{opacity:.65;font-size:12px;text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px}
           </style>

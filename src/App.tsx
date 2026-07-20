@@ -10,6 +10,7 @@ import { SidePanel } from './components/SidePanel'
 import { TopBar } from './components/TopBar'
 import { useAmbientSound } from './hooks/useAmbientSound'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
+import { useSiteFont } from './hooks/useSiteFont'
 import { useTimerLoop } from './hooks/useTimerLoop'
 import { useAppStore } from './store/useAppStore'
 
@@ -17,6 +18,7 @@ export default function App() {
   useTimerLoop()
   useAmbientSound()
   useKeyboardShortcuts()
+  useSiteFont()
   const mode = useAppStore((s) => s.mode)
   const clearMode = useAppStore((s) => s.clearMode)
   const running = useAppStore((s) => s.running)

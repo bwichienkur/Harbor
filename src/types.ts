@@ -94,6 +94,10 @@ export interface AppSettings {
   softClearFocus: boolean
   highContrast: boolean
   autoOverlay: boolean
+  /** Preset font id, or `"custom"` to use `customFont`. */
+  siteFont: string
+  /** Any Google Font / system font family name when `siteFont` is `"custom"`. */
+  customFont: string
 }
 
 export interface StudyRoomState {

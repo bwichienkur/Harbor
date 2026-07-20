@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { siteFontPresets } from '../../data/fonts'
 import { playChime } from '../../lib/audio'
 import { requestNotificationPermission } from '../../lib/notifications'
 import { downloadText } from '../../lib/stats'
@@ -87,6 +88,48 @@ export function SettingsPanel() {
             on={settings.showNotepad}
             onToggle={() => updateSettings({ showNotepad: !settings.showNotepad })}
           />
+          <div className="field">
+            <label htmlFor="site-font">Site font</label>
+            <select
+              id="site-font"
+              value={settings.siteFont}
+              onChange={(e) => updateSettings({ siteFont: e.target.value })}
+            >
+              {siteFontPresets.map((font) => (
+                <option key={font.id} value={font.id}>
+                  {font.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {settings.siteFont === 'custom' && (
+            <div className="field">
+              <label htmlFor="custom-font">Custom font family</label>
+              <input
+                id="custom-font"
+                value={settings.customFont}
+                onChange={(e) => updateSettings({ customFont: e.target.value })}
+                placeholder="e.g. Playfair Display, JetBrains Mono, Comic Neue"
+              />
+              <p className="helper">
+                Type any Google Fonts family name (or a system font). Harbor loads it for the whole
+                app.
+              </p>
+              {settings.customFont.trim() && (
+                <p className="font-preview" style={{ fontFamily: `"${settings.customFont.trim()}"` }}>
+                  The quick brown fox jumps over the lazy dog · 25:00
+                </p>
+              )}
+            </div>
+          )}
+          {settings.siteFont !== 'custom' && (
+            <p
+              className="font-preview"
+              style={{ fontFamily: `"${settings.siteFont}", system-ui, sans-serif` }}
+            >
+              Preview · Harbor Focus · 25:00
+            </p>
+          )}
           <div className="field">
             <label htmlFor="session-icon">Session tally icon</label>
             <select

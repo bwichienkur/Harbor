@@ -173,6 +173,8 @@ const defaultSettings: AppSettings = {
   softClearFocus: true,
   highContrast: false,
   autoOverlay: true,
+  siteFont: 'Manrope',
+  customFont: '',
 }
 
 function nextPhase(
