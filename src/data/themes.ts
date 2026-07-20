@@ -1,7 +1,133 @@
 import type { Theme } from '../types'
 
-/** Virtual POV workspaces — places you’d actually sit down and get work done. */
+/**
+ * Virtual POV workspaces — places you’d actually sit down and get work done.
+ * Animated themes use looping Mixkit stock video (rainy windows, cafés, offices).
+ */
 export const themes: Theme[] = [
+  // —— Animated ambient worlds (Flocus-style looping scenes) ——
+  {
+    id: 'rainy-window-desk',
+    name: 'Rainy Window Desk',
+    image:
+      'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=1600&q=70',
+    video: 'https://assets.mixkit.co/videos/2846/2846-720.mp4',
+    overlay: 0.42,
+    category: 'desk',
+    animated: true,
+  },
+  {
+    id: 'open-window-rain',
+    name: 'Open Window Rain',
+    image:
+      'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=1600&q=70',
+    video: 'https://assets.mixkit.co/videos/28085/28085-720.mp4',
+    overlay: 0.4,
+    category: 'desk',
+    animated: true,
+  },
+  {
+    id: 'foggy-rain-glass',
+    name: 'Foggy Rain Glass',
+    image:
+      'https://images.unsplash.com/photo-1428908728789-d2de25dbd4e2?auto=format&fit=crop&w=1600&q=70',
+    video: 'https://assets.mixkit.co/videos/18308/18308-720.mp4',
+    overlay: 0.38,
+    category: 'desk',
+    animated: true,
+  },
+  {
+    id: 'tablet-by-window',
+    name: 'Tablet by the Window',
+    image:
+      'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=1600&q=70',
+    video: 'https://assets.mixkit.co/videos/14606/14606-720.mp4',
+    overlay: 0.44,
+    category: 'desk',
+    animated: true,
+  },
+  {
+    id: 'dev-coffee-desk',
+    name: 'Dev + Coffee',
+    image:
+      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1600&q=70',
+    video: 'https://assets.mixkit.co/videos/1749/1749-720.mp4',
+    overlay: 0.46,
+    category: 'desk',
+    animated: true,
+  },
+  {
+    id: 'laptop-cafe-live',
+    name: 'Laptop Café Live',
+    image:
+      'https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1600&q=70',
+    video: 'https://assets.mixkit.co/videos/206/206-720.mp4',
+    overlay: 0.45,
+    category: 'cafe',
+    animated: true,
+  },
+  {
+    id: 'reading-cafe-live',
+    name: 'Reading Café',
+    image:
+      'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1600&q=70',
+    video: 'https://assets.mixkit.co/videos/237/237-720.mp4',
+    overlay: 0.46,
+    category: 'cafe',
+    animated: true,
+  },
+  {
+    id: 'urban-coffee-live',
+    name: 'Urban Coffee Shop',
+    image:
+      'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1600&q=70',
+    video: 'https://assets.mixkit.co/videos/4350/4350-720.mp4',
+    overlay: 0.48,
+    category: 'cafe',
+    animated: true,
+  },
+  {
+    id: 'city-window-office',
+    name: 'City Window Office',
+    image:
+      'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=70',
+    video: 'https://assets.mixkit.co/videos/14279/14279-720.mp4',
+    overlay: 0.44,
+    category: 'office',
+    animated: true,
+  },
+  {
+    id: 'highrise-window',
+    name: 'Highrise Window',
+    image:
+      'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1600&q=70',
+    video: 'https://assets.mixkit.co/videos/13218/13218-720.mp4',
+    overlay: 0.5,
+    category: 'office',
+    animated: true,
+  },
+  {
+    id: 'open-office-live',
+    name: 'Open Office Live',
+    image:
+      'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=70',
+    video: 'https://assets.mixkit.co/videos/914/914-720.mp4',
+    overlay: 0.48,
+    category: 'office',
+    animated: true,
+  },
+  {
+    id: 'busy-office-live',
+    name: 'Busy Office Floor',
+    image:
+      'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1600&q=70',
+    video: 'https://assets.mixkit.co/videos/918/918-720.mp4',
+    overlay: 0.5,
+    category: 'office',
+    animated: true,
+  },
+
+  // —— Still POV workspaces ——
   {
     id: 'sunlit-desk',
     name: 'Sunlit Desk',
@@ -205,3 +331,4 @@ export const themes: Theme[] = [
 ]
 
 export const themeImageUrls = themes.map((t) => t.image)
+export const animatedThemes = themes.filter((t) => t.animated && t.video)

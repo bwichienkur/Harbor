@@ -3,7 +3,7 @@ import { themes } from '../../data/themes'
 import type { DashMode } from '../../types'
 import { useAppStore } from '../../store/useAppStore'
 
-type ThemeCat = 'desk' | 'cafe' | 'library' | 'office'
+type ThemeFilter = 'all' | 'animated' | 'desk' | 'cafe' | 'library' | 'office'
 
 export function ThemesPanel() {
   const mode = useAppStore((s) => s.mode)
@@ -16,7 +16,7 @@ export function ThemesPanel() {
   const setTheme = useAppStore((s) => s.setTheme)
   const setCustomBackground = useAppStore((s) => s.setCustomBackground)
   const updateSettings = useAppStore((s) => s.updateSettings)
-  const [filter, setFilter] = useState<'all' | ThemeCat>('all')
+  const [filter, setFilter] = useState<ThemeFilter>('animated')
 
   const slot: DashMode = mode
   const activeId =
@@ -30,17 +30,20 @@ export function ThemesPanel() {
     setDraftVideo(videoValue)
   }, [videoValue])
 
-  const visible =
-    filter === 'all' ? themes : themes.filter((t) => t.category === filter)
+  const visible = themes.filter((t) => {
+    if (filter === 'all') return true
+    if (filter === 'animated') return Boolean(t.animated && t.video)
+    return t.category === filter
+  })
 
   return (
     <div className="panel-section">
       <p className="helper">
-        Workspaces for <strong>{slot}</strong> mode.
+        Workspaces for <strong>{slot}</strong> mode — animated scenes loop like a living window.
       </p>
 
       <div className="eta-row">
-        {(['all', 'desk', 'cafe', 'library', 'office'] as const).map((f) => (
+        {(['animated', 'all', 'desk', 'cafe', 'library', 'office'] as const).map((f) => (
           <button
             key={f}
             type="button"
@@ -123,7 +126,7 @@ export function ThemesPanel() {
           return (
             <button
               key={theme.id}
-              className={`theme-card ${applied ? 'active' : ''}`}
+              className={`theme-card ${applied ? 'active' : ''} ${theme.animated ? 'theme-card-live' : ''}`}
               onClick={() => {
                 setCustomBackground(null)
                 updateSettings({ [videoKey]: '' })
@@ -132,6 +135,7 @@ export function ThemesPanel() {
               }}
             >
               <img src={theme.image} alt="" loading="lazy" decoding="async" />
+              {theme.animated && <em className="theme-live">Live</em>}
               {applied && <em className="theme-applied">Applied</em>}
               <span>{theme.name}</span>
             </button>

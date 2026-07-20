@@ -38,9 +38,13 @@ export interface Task {
 export interface Theme {
   id: string
   name: string
+  /** Still poster / fallback image */
   image: string
   overlay: number
   category: 'desk' | 'cafe' | 'library' | 'office'
+  /** Looping ambient video (mp4/webm URL or YouTube URL) */
+  video?: string
+  animated?: boolean
 }
 
 export interface AmbientSound {

@@ -302,16 +302,22 @@ button {
     calc(1.1rem * var(--timer-scale));
   touch-action: none;
   user-select: none;
+  /* Let the theme show through — no chrome panel */
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .timer-card.floating.interacting {
-  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.45);
-  border-color: rgba(125, 184, 168, 0.45);
+  box-shadow: none;
+  border-color: transparent;
 }
 
 .timer-card.floating.clear {
-  background: rgba(12, 22, 22, 0.28);
-  border-color: rgba(244, 241, 234, 0.1);
+  background: transparent;
+  border-color: transparent;
 }
 
 .timer-drag-bar {
@@ -324,6 +330,10 @@ button {
   padding: 0.15rem 0.1rem 0.35rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   margin-bottom: 0.15rem;
+}
+
+.timer-card.floating .timer-drag-bar {
+  border-bottom-color: transparent;
 }
 
 .timer-drag-actions {
@@ -373,6 +383,23 @@ button {
   font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1;
+}
+
+.timer-card.floating .timer-digits,
+.timer-card.floating .phase-label,
+.timer-card.floating .timer-meta,
+.timer-card.floating .drag-grip,
+.timer-card.floating .drag-hint {
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.55), 0 0 2px rgba(0, 0, 0, 0.4);
+}
+
+.timer-card.floating .timer-ring-track {
+  stroke: rgba(244, 241, 234, 0.22);
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+}
+
+.timer-card.floating .timer-ring-progress {
+  filter: drop-shadow(0 0 8px rgba(125, 184, 168, 0.45));
 }
 
 .timer-meta {
@@ -694,6 +721,45 @@ button {
   text-align: left;
 }
 
+.theme-live {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  z-index: 1;
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0f1c1c;
+  background: rgba(125, 184, 168, 0.92);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.theme-live::before {
+  content: '';
+  display: inline-block;
+  width: 0.4em;
+  height: 0.4em;
+  margin-right: 0.35em;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: 0.05em;
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
 .sound-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -829,9 +895,11 @@ button {
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  background: var(--bg-deep);
 }
 
-.bg-video iframe {
+.bg-video iframe,
+.bg-video video {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -841,6 +909,14 @@ button {
   min-height: 56.25vw;
   transform: translate(-50%, -50%);
   border: 0;
+}
+
+.bg-video video {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
 }
 
 .color-dot {
@@ -1111,7 +1187,7 @@ button {
 .theme-applied {
   position: absolute;
   top: 0.45rem;
-  left: 0.45rem;
+  right: 0.45rem;
   margin: 0;
   padding: 0.2rem 0.45rem;
   border-radius: 999px;

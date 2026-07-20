@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { themes } from '../data/themes'
-import { toYoutubeEmbed } from '../lib/youtube'
+import { extractYoutubeId, toYoutubeEmbed } from '../lib/youtube'
 import { useAppStore } from '../store/useAppStore'
 
 async function estimateBrightness(src: string): Promise<number> {
@@ -34,6 +34,15 @@ async function estimateBrightness(src: string): Promise<number> {
   })
 }
 
+function isDirectVideoUrl(raw: string) {
+  try {
+    const url = new URL(raw.trim())
+    return /\.(mp4|webm|ogg)(\?|$)/i.test(url.pathname)
+  } catch {
+    return false
+  }
+}
+
 export function Background() {
   const mode = useAppStore((s) => s.mode)
   const homeThemeId = useAppStore((s) => s.homeThemeId)
@@ -50,17 +59,24 @@ export function Background() {
   const theme = themes.find((t) => t.id === themeId) ?? themes[0]
   const image = customBackground || theme.image
 
-  const videoUrl =
+  const customVideoUrl =
     mode === 'focus'
       ? settings.focusVideoUrl
       : mode === 'ambient'
         ? settings.ambientVideoUrl
         : settings.homeVideoUrl
 
-  const embed = useMemo(() => toYoutubeEmbed(videoUrl, { background: true }), [videoUrl])
+  // Custom YouTube override wins; otherwise use the theme's built-in looping video.
+  const activeVideo = customVideoUrl.trim() || (!customBackground ? theme.video ?? '' : '')
+  const youtubeEmbed = useMemo(
+    () => (extractYoutubeId(activeVideo) ? toYoutubeEmbed(activeVideo, { background: true }) : ''),
+    [activeVideo],
+  )
+  const nativeVideo = !youtubeEmbed && isDirectVideoUrl(activeVideo) ? activeVideo : ''
+  const hasVideo = Boolean(youtubeEmbed || nativeVideo)
 
   useEffect(() => {
-    if (embed || !autoOverlay) return
+    if (hasVideo || !autoOverlay) return
     let cancelled = false
     void estimateBrightness(image).then((b) => {
       if (!cancelled) setBrightness(b)
@@ -68,21 +84,36 @@ export function Background() {
     return () => {
       cancelled = true
     }
-  }, [image, embed, autoOverlay])
+  }, [image, hasVideo, autoOverlay])
 
   const baseOverlay = customBackground ? overlayStrength : theme.overlay
-  const autoBoost = autoOverlay && !embed ? Math.max(0, (brightness - 0.42) * 0.55) : 0
-  const overlay = Math.min(0.88, Math.max(0.18, baseOverlay + autoBoost))
+  const autoBoost = autoOverlay && !hasVideo ? Math.max(0, (brightness - 0.42) * 0.55) : 0
+  // Slightly lighter overlay on video so motion (rain, people) stays visible
+  const videoBias = hasVideo ? -0.06 : 0
+  const overlay = Math.min(0.88, Math.max(0.18, baseOverlay + autoBoost + videoBias))
 
   return (
     <>
-      {embed ? (
+      {youtubeEmbed ? (
         <div className="bg-video" aria-hidden>
           <iframe
-            src={embed}
+            src={youtubeEmbed}
             title="Background video"
             allow="autoplay; encrypted-media"
             tabIndex={-1}
+          />
+        </div>
+      ) : nativeVideo ? (
+        <div className="bg-video bg-video-native" aria-hidden>
+          <video
+            key={nativeVideo}
+            src={nativeVideo}
+            poster={theme.image}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
           />
         </div>
       ) : (

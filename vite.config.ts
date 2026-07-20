@@ -26,6 +26,21 @@ export default defineConfig({
             },
           },
           {
+            urlPattern: ({ url }) => url.hostname.includes('assets.mixkit.co'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'harbor-theme-videos',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+              cacheableResponse: {
+                statuses: [0, 200, 206],
+              },
+              rangeRequests: true,
+            },
+          },
+          {
             urlPattern: ({ url }) =>
               url.hostname.includes('fonts.googleapis.com') ||
               url.hostname.includes('fonts.gstatic.com'),
