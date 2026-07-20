@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Harbor — UI demo</title>
+    <style>
+      :root {
+        --ink: #1a221c;
+        --mist: #e8efe6;
+        --pine: #2f5d4a;
+        --glow: #c9a86a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+        color: var(--ink);
+        background:
+          radial-gradient(1200px 600px at 20% -10%, rgba(201, 168, 106, 0.28), transparent 55%),
+          radial-gradient(900px 500px at 90% 10%, rgba(47, 93, 74, 0.22), transparent 50%),
+          linear-gradient(165deg, #f3f7f2 0%, #dfe8dc 45%, #c9d6c8 100%);
+        display: grid;
+        place-items: center;
+        padding: 2rem 1.25rem 3rem;
+      }
+      main {
+        width: min(960px, 100%);
+      }
+      h1 {
+        margin: 0 0 0.35rem;
+        font-size: clamp(2.4rem, 5vw, 3.4rem);
+        letter-spacing: -0.03em;
+        font-weight: 700;
+      }
+      h1 span {
+        color: var(--pine);
+      }
+      p {
+        margin: 0 0 1.25rem;
+        max-width: 36rem;
+        font-size: 1.05rem;
+        line-height: 1.5;
+        opacity: 0.85;
+      }
+      .stage {
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(26, 34, 28, 0.22);
+        background: #0d1210;
+      }
+      video {
+        display: block;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16 / 10;
+        background: #0d1210;
+      }
+      .meta {
+        margin-top: 1rem;
+        font-size: 0.92rem;
+        opacity: 0.7;
+      }
+      a {
+        color: var(--pine);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Harbor<span>.</span></h1>
+      <p>New UI walkthrough — modes, timer, tasks, themes, sounds, and stats.</p>
+      <div class="stage">
+        <video controls autoplay muted playsinline poster="" src="https://litter.catbox.moe/pg8a7x.mp4">
+          Your browser does not support video.
+        </video>
+      </div>
+      <p class="meta">
+        Direct file:
+        <a href="https://litter.catbox.moe/pg8a7x.mp4">litter.catbox.moe/pg8a7x.mp4</a>
+        · hosted ~72 hours
+      </p>
+    </main>
+  </body>
+</html>
