@@ -89,8 +89,8 @@ export function Background() {
   const baseOverlay = customBackground ? overlayStrength : theme.overlay
   const autoBoost = autoOverlay && !hasVideo ? Math.max(0, (brightness - 0.42) * 0.55) : 0
   // Slightly lighter overlay on video so motion (rain, people) stays visible
-  const videoBias = hasVideo ? -0.06 : 0
-  const overlay = Math.min(0.88, Math.max(0.18, baseOverlay + autoBoost + videoBias))
+  const videoBias = hasVideo ? -0.12 : -0.04
+  const overlay = Math.min(0.72, Math.max(0.12, baseOverlay + autoBoost + videoBias))
 
   return (
     <>

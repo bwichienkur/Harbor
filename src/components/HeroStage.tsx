@@ -8,9 +8,7 @@ export function HeroStage() {
   const mode = useAppStore((s) => s.mode)
   const settings = useAppStore((s) => s.settings)
   const clearMode = useAppStore((s) => s.clearMode)
-  const running = useAppStore((s) => s.running)
   const setPanel = useAppStore((s) => s.setPanel)
-  const softHideHint = mode === 'focus' && running && settings.softClearFocus
 
   return (
     <main className={`main-stage ${clearMode ? 'is-clear' : ''}`}>
@@ -33,16 +31,6 @@ export function HeroStage() {
               </button>
             )}
           </motion.div>
-        ) : mode !== 'home' && !clearMode && !softHideHint ? (
-          <motion.p
-            key={`${mode}-hint`}
-            className="timer-hint text-scrim"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            Hold the top bar to move · use ± to resize
-          </motion.p>
         ) : null}
       </AnimatePresence>
     </main>

@@ -18,13 +18,7 @@ import {
   useAppStore,
 } from '../store/useAppStore'
 import type { TimerLayout } from '../types'
-
-const phaseCopy = {
-  focus: 'Focus',
-  shortBreak: 'Short Break',
-  longBreak: 'Long Break',
-  idle: 'Complete',
-} as const
+import { SessionTally } from './SessionTally'
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n))
@@ -58,7 +52,6 @@ export function FocusTimer() {
   const remainingMs = useAppStore((s) => s.remainingMs)
   const elapsedMs = useAppStore((s) => s.elapsedMs)
   const running = useAppStore((s) => s.running)
-  const completedFocusCount = useAppStore((s) => s.completedFocusCount)
   const timerLayout = useAppStore((s) => s.timerLayout)
   const startTimer = useAppStore((s) => s.startTimer)
   const pauseTimer = useAppStore((s) => s.pauseTimer)
@@ -73,7 +66,9 @@ export function FocusTimer() {
   const setMiniTimer = useAppStore((s) => s.setMiniTimer)
   const tasks = useAppStore((s) => s.tasks)
   const activeTaskId = useAppStore((s) => s.activeTaskId)
+  const roomRole = useAppStore((s) => s.room.role)
   const topTask = tasks.find((t) => t.id === activeTaskId) ?? tasks.find((t) => !t.done)
+  const guestLocked = roomRole === 'guest'
 
   const cardRef = useRef<HTMLElement>(null)
   const [local, setLocal] = useState<TimerLayout>(() => timerLayout ?? centerLayout())
@@ -148,10 +143,7 @@ export function FocusTimer() {
     window.removeEventListener('pointercancel', endInteraction)
   }, [onPointerMove])
 
-  const beginInteraction = (
-    kind: 'drag' | 'resize',
-    event: React.PointerEvent,
-  ) => {
+  const beginInteraction = (kind: 'drag' | 'resize', event: React.PointerEvent) => {
     if (lockTimerPosition || event.button !== 0) return
     event.preventDefault()
     event.stopPropagation()
@@ -171,8 +163,6 @@ export function FocusTimer() {
 
   const isStopwatch = timerSettings.mode === 'stopwatch'
   const displayMs = isStopwatch ? elapsedMs : remainingMs
-  const phaseLabel =
-    mode === 'ambient' && phase === 'focus' ? 'Break space' : phaseCopy[phase]
   const scale = local.width / DEFAULT_TIMER_WIDTH
   const progress = phaseProgress(timerSettings, phase, remainingMs, elapsedMs)
   const radius = 52
@@ -199,13 +189,12 @@ export function FocusTimer() {
       <div
         className="timer-drag-bar"
         onPointerDown={(e) => beginInteraction('drag', e)}
-        title={lockTimerPosition ? 'Position locked' : 'Hold to move'}
+        title={lockTimerPosition ? 'Position locked' : 'Drag to move'}
       >
         <span className="drag-grip" aria-hidden>
           <GripVertical size={18} strokeWidth={2} />
-          <span className="drag-hint">{lockTimerPosition ? 'Locked' : 'Hold to move'}</span>
         </span>
-        <span className="phase-label">{phaseLabel}</span>
+        <SessionTally scale={scale} />
         <div className="timer-drag-actions timer-chrome">
           <button
             type="button"
@@ -274,30 +263,26 @@ export function FocusTimer() {
         </div>
       </div>
 
-      {(topTask || !running) && (
-        <div className="timer-meta text-scrim">
-          {running && topTask
-            ? topTask.text
-            : `${timerSettings.mode} · session ${completedFocusCount + (phase === 'focus' && running ? 1 : 0)}${topTask ? ` · ${topTask.text}` : ''}`}
-        </div>
-      )}
+      {topTask && <div className="timer-meta text-scrim">{topTask.text}</div>}
+      {guestLocked && <div className="timer-meta text-scrim">Following room host</div>}
 
       <div className={`timer-controls ${running ? 'timer-chrome' : ''}`}>
-        {!running ? (
+        {!guestLocked && !running ? (
           <button className="btn primary" onClick={startTimer}>
             Start
           </button>
-        ) : (
+        ) : null}
+        {!guestLocked && running ? (
           <button className="btn primary" onClick={pauseTimer}>
             Pause
           </button>
-        )}
-        {(!running || hovered || clearMode) && (
+        ) : null}
+        {!guestLocked && (!running || hovered || clearMode) && (
           <button className="btn" onClick={() => skipPhase()}>
             Skip
           </button>
         )}
-        {!running && (
+        {!guestLocked && !running && (
           <button className="btn" onClick={resetTimer}>
             Reset
           </button>

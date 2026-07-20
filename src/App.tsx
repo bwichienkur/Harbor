@@ -1,5 +1,6 @@
 import { Background } from './components/Background'
 import { ClearModeEscape } from './components/ClearModeEscape'
+import { FocusTaskDock } from './components/FocusTaskDock'
 import { FocusTimer } from './components/FocusTimer'
 import { HeroStage } from './components/HeroStage'
 import { MiniTimer } from './components/MiniTimer'
@@ -39,6 +40,7 @@ export default function App() {
       <TopBar />
       <HeroStage />
       {mode !== 'home' && <FocusTimer />}
+      <FocusTaskDock />
       <ModeSwitch />
       {!clearMode && <SidePanel />}
       <MiniTimer />

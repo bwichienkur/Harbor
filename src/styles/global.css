@@ -13,9 +13,9 @@
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
   --radius: 18px;
   --radius-sm: 12px;
-  --font-display: 'Syne', sans-serif;
-  --font-body: 'Figtree', sans-serif;
-  --font-time: 'Space Grotesk', 'Syne', sans-serif;
+  --font-display: 'Manrope', system-ui, sans-serif;
+  --font-body: 'Manrope', system-ui, sans-serif;
+  --font-time: 'Manrope', system-ui, sans-serif;
   color: var(--ink);
   font-family: var(--font-body);
   font-synthesis: none;
@@ -171,9 +171,9 @@ button {
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(14px);
+  background: transparent;
+  border: 1px solid transparent;
+  backdrop-filter: none;
   transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
@@ -360,8 +360,8 @@ button {
   width: calc(28px * var(--timer-scale));
   height: calc(28px * var(--timer-scale));
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--glass-border);
+  background: transparent;
+  border: 1px solid rgba(244, 241, 234, 0.18);
   display: grid;
   place-items: center;
   font-size: calc(0.95rem * var(--timer-scale));
@@ -479,13 +479,13 @@ button {
 .btn {
   border-radius: 999px;
   padding: 0.75rem 1.25rem;
-  background: rgba(244, 241, 234, 0.1);
-  border: 1px solid var(--glass-border);
+  background: transparent;
+  border: 1px solid rgba(244, 241, 234, 0.22);
   transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .btn:hover {
-  background: rgba(244, 241, 234, 0.18);
+  background: rgba(244, 241, 234, 0.12);
   transform: translateY(-1px);
 }
 
@@ -517,10 +517,10 @@ button {
   gap: 0.35rem;
   padding: 0.35rem;
   border-radius: 999px;
-  background: var(--glass-strong);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(16px);
-  box-shadow: var(--shadow);
+  background: transparent;
+  border: 1px solid transparent;
+  backdrop-filter: none;
+  box-shadow: none;
 }
 
 .mode-btn {
@@ -541,8 +541,8 @@ button {
   position: absolute;
   inset: 0;
   z-index: 5;
-  background: rgba(5, 10, 10, 0.35);
-  backdrop-filter: blur(2px);
+  background: rgba(5, 10, 10, 0.2);
+  backdrop-filter: none;
 }
 
 .side-panel {
@@ -552,12 +552,12 @@ button {
   bottom: 0;
   z-index: 6;
   width: min(420px, 100%);
-  background: rgba(12, 20, 20, 0.88);
-  border-left: 1px solid var(--glass-border);
-  backdrop-filter: blur(22px);
+  background: rgba(12, 20, 20, 0.55);
+  border-left: 1px solid rgba(244, 241, 234, 0.1);
+  backdrop-filter: blur(10px);
   padding: 1.2rem;
   overflow: auto;
-  box-shadow: -20px 0 50px rgba(0, 0, 0, 0.35);
+  box-shadow: none;
   transform: translate3d(0, 0, 0);
   animation: panel-in 0.22s ease;
 }
@@ -1311,5 +1311,173 @@ button {
 
   .drag-hint {
     display: none;
+  }
+}
+
+/* Session tally icons (Flocus-style filled pips) */
+.session-tally {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(0.28rem * var(--tally-scale, 1));
+  color: var(--accent);
+}
+
+.session-pip {
+  display: grid;
+  place-items: center;
+  opacity: 0.35;
+  transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+
+.session-pip.filled {
+  opacity: 1;
+  color: var(--accent);
+}
+
+.session-pip.current {
+  opacity: 0.85;
+  transform: scale(1.08);
+  animation: pip-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pip-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.timer-card.floating .session-tally {
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45));
+}
+
+/* Focus/Break task dock */
+.focus-task-dock {
+  position: absolute;
+  z-index: 4;
+  left: 1rem;
+  bottom: calc(5.2rem + env(safe-area-inset-bottom));
+  width: min(280px, calc(100vw - 2rem));
+  padding: 0.75rem 0.8rem;
+  border-radius: 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ink);
+  pointer-events: auto;
+}
+
+.focus-task-dock-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.focus-task-dock-head strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+.focus-task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.focus-task-list li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.45rem;
+  align-items: start;
+}
+
+.focus-task-check {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.15rem;
+  border-radius: 5px;
+  border: 1.5px solid rgba(244, 241, 234, 0.45);
+  background: transparent;
+}
+
+.focus-task-main {
+  display: grid;
+  gap: 0.1rem;
+  text-align: left;
+  color: var(--ink);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+.focus-task-main span {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.focus-task-main small {
+  color: var(--ink-mute);
+  font-size: 0.72rem;
+}
+
+.focus-task-list li.active .focus-task-main span {
+  color: var(--accent);
+}
+
+.duration-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.duration-field input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent-strong);
+}
+
+.duration-quicks {
+  margin-top: 0.35rem;
+}
+
+.room-code {
+  font-family: var(--font-time);
+  font-size: 1.8rem;
+  letter-spacing: 0.12em;
+}
+
+.room-code-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.room-error {
+  color: var(--danger);
+}
+
+.room-active {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  .focus-task-dock {
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+    bottom: calc(4.8rem + env(safe-area-inset-bottom));
   }
 }

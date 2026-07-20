@@ -10,6 +10,7 @@ import {
   Palette,
   Settings,
   BarChart3,
+  Users,
   Volume2,
   X,
 } from 'lucide-react'
@@ -27,6 +28,7 @@ const moreTools = [
   { id: 'music' as const, label: 'Music', Icon: ListMusic },
   { id: 'notepad' as const, label: 'Notes', Icon: NotebookPen },
   { id: 'stats' as const, label: 'Stats', Icon: BarChart3 },
+  { id: 'room' as const, label: 'Room', Icon: Users },
 ]
 
 export function TopBar() {

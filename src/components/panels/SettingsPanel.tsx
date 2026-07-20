@@ -78,10 +78,33 @@ export function SettingsPanel() {
             onToggle={() => updateSettings({ showTasks: !settings.showTasks })}
           />
           <Toggle
+            label="Show task list on Focus / Break"
+            on={settings.showTasksOnFocus}
+            onToggle={() => updateSettings({ showTasksOnFocus: !settings.showTasksOnFocus })}
+          />
+          <Toggle
             label="Show notepad in tools"
             on={settings.showNotepad}
             onToggle={() => updateSettings({ showNotepad: !settings.showNotepad })}
           />
+          <div className="field">
+            <label htmlFor="session-icon">Session tally icon</label>
+            <select
+              id="session-icon"
+              value={settings.sessionIconShape}
+              onChange={(e) =>
+                updateSettings({
+                  sessionIconShape: e.target.value as typeof settings.sessionIconShape,
+                })
+              }
+            >
+              <option value="heart">Hearts</option>
+              <option value="star">Stars</option>
+              <option value="circle">Circles</option>
+              <option value="flame">Flames</option>
+              <option value="check">Checks</option>
+            </select>
+          </div>
           <Toggle
             label="Soft clear chrome while focusing"
             on={settings.softClearFocus}

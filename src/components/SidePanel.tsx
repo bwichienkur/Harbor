@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 import { MusicPanel } from './panels/MusicPanel'
 import { NotepadPanel } from './panels/NotepadPanel'
+import { RoomPanel } from './panels/RoomPanel'
 import { SettingsPanel } from './panels/SettingsPanel'
 import { SoundsPanel } from './panels/SoundsPanel'
 import { StatsPanel } from './panels/StatsPanel'
@@ -17,6 +18,7 @@ const titles = {
   settings: 'Settings',
   notepad: 'Notepad',
   music: 'Music',
+  room: 'Study Room',
 } as const
 
 export function SidePanel() {
@@ -58,6 +60,7 @@ export function SidePanel() {
             {panel === 'settings' && <SettingsPanel />}
             {panel === 'notepad' && <NotepadPanel />}
             {panel === 'music' && <MusicPanel />}
+            {panel === 'room' && <RoomPanel />}
           </motion.aside>
         </>
       )}

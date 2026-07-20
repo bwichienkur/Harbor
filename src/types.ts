@@ -4,23 +4,18 @@ export type TimerMode = 'pomodoro' | 'animedoro' | 'countdown' | 'stopwatch' | '
 
 export type TimerPhase = 'focus' | 'shortBreak' | 'longBreak' | 'idle'
 
-export type TaskEta =
-  | '5m'
-  | '10m'
-  | '15m'
-  | '30m'
-  | '45m'
-  | '1h'
-  | '2h'
-  | '3h'
-  | '4h'
-  | null
+/** Estimated focus minutes for a task (null = unset). Legacy string labels are normalized on load. */
+export type TaskEta = number | null
 
 export type TaskColor = 'sage' | 'sand' | 'coral' | 'sky' | 'lilac' | 'slate'
 
 export type TaskRecurrence = 'none' | 'daily' | 'weekdays' | 'weekly'
 
 export type AlertSoundId = 'chime' | 'bell' | 'soft' | 'bright' | 'wood'
+
+export type SessionIconShape = 'heart' | 'star' | 'circle' | 'flame' | 'check'
+
+export type RoomRole = 'host' | 'guest' | null
 
 export interface Task {
   id: string
@@ -81,6 +76,8 @@ export interface AppSettings {
   showQuotes: boolean
   showTasks: boolean
   showNotepad: boolean
+  showTasksOnFocus: boolean
+  sessionIconShape: SessionIconShape
   overlayStrength: number
   youtubeUrl: string
   spotifyUrl: string
@@ -97,6 +94,28 @@ export interface AppSettings {
   softClearFocus: boolean
   highContrast: boolean
   autoOverlay: boolean
+}
+
+export interface StudyRoomState {
+  code: string | null
+  role: RoomRole
+  connected: boolean
+  peerCount: number
+  lastError: string | null
+}
+
+/** Host → guest timer payload for study rooms. */
+export interface RoomTimerSnapshot {
+  mode: DashMode
+  phase: TimerPhase
+  remainingMs: number
+  elapsedMs: number
+  running: boolean
+  phaseEndsAt: number | null
+  stopwatchStartedAt: number | null
+  completedFocusCount: number
+  timerSettings: TimerSettings
+  sessionIconShape: SessionIconShape
 }
 
 export interface TimerLayout {

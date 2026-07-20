@@ -1,11 +1,10 @@
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { etaToMinutes, formatDuration } from '../../lib/format'
+import { clampEtaMinutes, etaToMinutes, formatDuration, formatEtaMinutes } from '../../lib/format'
 import { plannedMinutes } from '../../lib/stats'
-import type { TaskColor, TaskEta, TaskRecurrence } from '../../types'
+import type { TaskColor, TaskRecurrence } from '../../types'
 import { useAppStore } from '../../store/useAppStore'
 
-const etas: TaskEta[] = ['5m', '10m', '15m', '30m', '45m', '1h', '2h', '3h', '4h']
 const colors: TaskColor[] = ['sage', 'sand', 'coral', 'sky', 'lilac', 'slate']
 const recurrences: { id: TaskRecurrence; label: string }[] = [
   { id: 'none', label: 'Once' },
@@ -13,6 +12,7 @@ const recurrences: { id: TaskRecurrence; label: string }[] = [
   { id: 'weekdays', label: 'Weekdays' },
   { id: 'weekly', label: 'Weekly' },
 ]
+const quickMins = [15, 25, 45, 60, 90]
 
 export function TasksPanel() {
   const tasks = useAppStore((s) => s.tasks)
@@ -25,7 +25,7 @@ export function TasksPanel() {
   const setActiveTask = useAppStore((s) => s.setActiveTask)
 
   const [text, setText] = useState('')
-  const [selectedEta, setSelectedEta] = useState<TaskEta>('30m')
+  const [etaMins, setEtaMins] = useState(25)
   const [color, setColor] = useState<TaskColor>('sage')
   const [tags, setTags] = useState('')
   const [recurrence, setRecurrence] = useState<TaskRecurrence>('none')
@@ -57,7 +57,7 @@ export function TasksPanel() {
         onSubmit={(e) => {
           e.preventDefault()
           addTask(text, {
-            eta: selectedEta,
+            eta: clampEtaMinutes(etaMins),
             color,
             tags: tags
               .split(',')
@@ -78,17 +78,33 @@ export function TasksPanel() {
             placeholder="Ship the landing page…"
           />
         </div>
-        <div className="eta-row">
-          {etas.map((option) => (
-            <button
-              key={option}
-              type="button"
-              className={`chip ${selectedEta === option ? 'active' : ''}`}
-              onClick={() => setSelectedEta(option)}
-            >
-              {option}
-            </button>
-          ))}
+
+        <div className="field duration-field">
+          <div className="duration-label-row">
+            <label htmlFor="task-duration">Estimated time</label>
+            <strong>{formatEtaMinutes(etaMins)}</strong>
+          </div>
+          <input
+            id="task-duration"
+            type="range"
+            min={5}
+            max={240}
+            step={5}
+            value={etaMins}
+            onChange={(e) => setEtaMins(Number(e.target.value))}
+          />
+          <div className="eta-row duration-quicks">
+            {quickMins.map((mins) => (
+              <button
+                key={mins}
+                type="button"
+                className={`chip ${etaMins === mins ? 'active' : ''}`}
+                onClick={() => setEtaMins(mins)}
+              >
+                {mins < 60 ? `${mins}m` : `${mins / 60}h`}
+              </button>
+            ))}
+          </div>
         </div>
 
         <button
@@ -162,73 +178,81 @@ export function TasksPanel() {
         </div>
       )}
 
-      <div className="task-list">
-        {remaining.map((task) => (
-          <div
-            key={task.id}
-            className={`task-item color-${task.color} ${activeTaskId === task.id ? 'active-task' : ''}`}
-          >
-            <button className="tiny" aria-label="Complete" onClick={() => toggleTask(task.id)}>
-              ○
-            </button>
-            <div>
-              <div className="task-text">{task.text}</div>
-              <small className="helper">
-                {[task.eta, task.recurrence !== 'none' ? task.recurrence : null, ...(task.tags ?? [])]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </small>
-            </div>
-            <div className="task-actions">
+      <div className="panel-section">
+        <h3 className="panel-subhead">Open</h3>
+        <div className="task-list">
+          {remaining.map((task, index) => (
+            <div key={task.id} className={`task-row color-${task.color}`}>
               <button
-                className="tiny"
-                aria-label="Set as active focus task"
-                title="Focus this task"
+                type="button"
+                className="task-check"
+                aria-label="Complete"
+                onClick={() => toggleTask(task.id)}
+              />
+              <button
+                type="button"
+                className={`task-main ${activeTaskId === task.id ? 'active' : ''}`}
                 onClick={() => setActiveTask(task.id)}
               >
-                ◎
+                <span>{task.text}</span>
+                <small>
+                  {task.eta ? formatEtaMinutes(task.eta) : 'No ETA'}
+                  {task.tags.length ? ` · ${task.tags.join(', ')}` : ''}
+                </small>
               </button>
-              <button className="tiny" aria-label="Move up" onClick={() => reorderTask(task.id, 'up')}>
-                ↑
-              </button>
-              <button
-                className="tiny"
-                aria-label="Move down"
-                onClick={() => reorderTask(task.id, 'down')}
-              >
-                ↓
-              </button>
-              <button className="tiny" aria-label="Delete" onClick={() => removeTask(task.id)}>
-                ×
-              </button>
+              <div className="task-move">
+                <button
+                  type="button"
+                  className="tiny"
+                  disabled={index === 0}
+                  onClick={() => reorderTask(task.id, 'up')}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  className="tiny"
+                  disabled={index === remaining.length - 1}
+                  onClick={() => reorderTask(task.id, 'down')}
+                >
+                  ↓
+                </button>
+                <button type="button" className="tiny" onClick={() => removeTask(task.id)}>
+                  ×
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-        {remaining.length === 0 && (
-          <p className="helper">You’re clear. Add one priority task above to shape the day.</p>
-        )}
+          ))}
+        </div>
       </div>
 
       {done.length > 0 && (
-        <>
-          <h3 className="panel-subhead">Done</h3>
-          <div className="task-list">
+        <div className="panel-section">
+          <div className="duration-label-row">
+            <h3 className="panel-subhead">Done</h3>
+            <button type="button" className="tiny" onClick={clearDoneTasks}>
+              Clear
+            </button>
+          </div>
+          <div className="task-list done">
             {done.map((task) => (
-              <div key={task.id} className="task-item done">
-                <button className="tiny" aria-label="Undo" onClick={() => toggleTask(task.id)}>
-                  ✓
-                </button>
-                <div className="task-text">{task.text}</div>
-                <button className="tiny" aria-label="Delete" onClick={() => removeTask(task.id)}>
+              <div key={task.id} className={`task-row color-${task.color}`}>
+                <button
+                  type="button"
+                  className="task-check checked"
+                  aria-label="Undo"
+                  onClick={() => toggleTask(task.id)}
+                />
+                <div className="task-main">
+                  <span>{task.text}</span>
+                </div>
+                <button type="button" className="tiny" onClick={() => removeTask(task.id)}>
                   ×
                 </button>
               </div>
             ))}
           </div>
-          <button className="btn" onClick={clearDoneTasks}>
-            Clear completed
-          </button>
-        </>
+        </div>
       )}
     </div>
   )

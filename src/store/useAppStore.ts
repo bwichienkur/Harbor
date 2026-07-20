@@ -1,11 +1,13 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { themes } from '../data/themes'
+import { etaToMinutes } from '../lib/format'
 import type {
   AppSettings,
   DashMode,
   FocusSession,
   HarborBackup,
+  StudyRoomState,
   Task,
   TaskColor,
   TaskEta,
@@ -13,6 +15,7 @@ import type {
   TimerLayout,
   TimerPhase,
   TimerSettings,
+  RoomTimerSnapshot,
 } from '../types'
 
 export const DEFAULT_TIMER_WIDTH = 420
@@ -42,7 +45,7 @@ function normalizeTask(task: Partial<Task> & Pick<Task, 'id' | 'text'>): Task {
     id: task.id,
     text: task.text,
     done: task.done ?? false,
-    eta: task.eta ?? null,
+    eta: etaToMinutes(task.eta as number | string | null | undefined) || null,
     createdAt: task.createdAt ?? Date.now(),
     priority: task.priority ?? 0,
     color: task.color ?? 'sage',
@@ -81,11 +84,13 @@ export interface AppState {
     | 'settings'
     | 'notepad'
     | 'music'
+    | 'room'
   focusStartedAt: number | null
   activeTaskId: string | null
   timerLayout: TimerLayout | null
   clearMode: boolean
   miniTimer: boolean
+  room: StudyRoomState
 
   setMode: (mode: DashMode) => void
   setPanel: (panel: AppState['panel']) => void
@@ -102,6 +107,8 @@ export interface AppState {
   setTimerLayout: (layout: TimerLayout) => void
   resetTimerLayout: () => void
   setActiveTask: (id: string | null) => void
+  setRoom: (patch: Partial<StudyRoomState>) => void
+  applyRoomSnapshot: (snapshot: RoomTimerSnapshot) => void
 
   addTask: (
     text: string,
@@ -148,6 +155,8 @@ const defaultSettings: AppSettings = {
   showQuotes: false,
   showTasks: true,
   showNotepad: true,
+  showTasksOnFocus: true,
+  sessionIconShape: 'heart',
   overlayStrength: 0.45,
   youtubeUrl: '',
   spotifyUrl: '',
@@ -226,6 +235,13 @@ export const useAppStore = create<AppState>()(
       timerLayout: null,
       clearMode: false,
       miniTimer: false,
+      room: {
+        code: null,
+        role: null,
+        connected: false,
+        peerCount: 0,
+        lastError: null,
+      },
 
       setMode: (mode) => set({ mode }),
       setPanel: (panel) => set({ panel }),
@@ -237,6 +253,23 @@ export const useAppStore = create<AppState>()(
       setMiniTimer: (on) => set({ miniTimer: on }),
       updateSettings: (patch) =>
         set((s) => ({ settings: { ...s.settings, ...patch } })),
+      setRoom: (patch) => set((s) => ({ room: { ...s.room, ...patch } })),
+      applyRoomSnapshot: (snapshot) =>
+        set((s) => ({
+          mode: snapshot.mode,
+          phase: snapshot.phase,
+          remainingMs: snapshot.remainingMs,
+          elapsedMs: snapshot.elapsedMs,
+          running: snapshot.running,
+          phaseEndsAt: snapshot.phaseEndsAt,
+          stopwatchStartedAt: snapshot.stopwatchStartedAt,
+          completedFocusCount: snapshot.completedFocusCount,
+          timerSettings: { ...s.timerSettings, ...snapshot.timerSettings },
+          settings: {
+            ...s.settings,
+            sessionIconShape: snapshot.sessionIconShape ?? s.settings.sessionIconShape,
+          },
+        })),
       updateTimerSettings: (patch) => {
         const timerSettings = { ...get().timerSettings, ...patch }
         const phase = get().phase === 'idle' ? 'focus' : get().phase

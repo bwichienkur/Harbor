@@ -25,6 +25,14 @@ export function formatDuration(ms: number) {
   return m ? `${h}h ${m}m` : `${h}h`
 }
 
+export function formatEtaMinutes(mins: number | null | undefined) {
+  if (mins == null || mins <= 0) return 'No estimate'
+  if (mins < 60) return `${mins} min`
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return m ? `${h}h ${m}m` : `${h}h`
+}
+
 export function greetingFor(hour: number, name: string) {
   const who = name.trim() || 'friend'
   if (hour < 5) return `Still burning the midnight oil, ${who}?`
@@ -34,8 +42,17 @@ export function greetingFor(hour: number, name: string) {
   return `Winding down looks good on you, ${who}.`
 }
 
-export function etaToMinutes(eta: string | null): number {
-  if (!eta) return 0
-  if (eta.endsWith('h')) return Number(eta.replace('h', '')) * 60
-  return Number(eta.replace('m', ''))
+/** Accepts current numeric minutes or legacy Flocus-style labels like "30m" / "1h". */
+export function etaToMinutes(eta: number | string | null | undefined): number {
+  if (eta == null || eta === '') return 0
+  if (typeof eta === 'number') return Number.isFinite(eta) ? Math.max(0, Math.round(eta)) : 0
+  const raw = String(eta).trim().toLowerCase()
+  if (raw.endsWith('h')) return Number(raw.replace('h', '')) * 60
+  if (raw.endsWith('m')) return Number(raw.replace('m', ''))
+  const n = Number(raw)
+  return Number.isFinite(n) ? n : 0
+}
+
+export function clampEtaMinutes(mins: number) {
+  return Math.min(240, Math.max(5, Math.round(mins)))
 }

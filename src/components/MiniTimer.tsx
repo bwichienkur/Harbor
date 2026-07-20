@@ -48,9 +48,9 @@ export function MiniTimer() {
         pipWin.current = win
         win.document.body.innerHTML = `
           <style>
-            html,body{margin:0;height:100%;background:#0f1c1c;color:#f4f1ea;font-family:'Space Grotesk',Figtree,system-ui,sans-serif;display:grid;place-items:center}
+            html,body{margin:0;height:100%;background:#0f1c1c;color:#f4f1ea;font-family:Manrope,system-ui,sans-serif;display:grid;place-items:center}
             .t{font-size:42px;font-weight:700;letter-spacing:-0.03em;font-variant-numeric:tabular-nums}
-            .s{opacity:.65;font-size:12px;text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px;font-family:Figtree,system-ui,sans-serif}
+            .s{opacity:.65;font-size:12px;text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px}
           </style>
           <div style="text-align:center">
             <div class="s" id="phase">${phase}</div>
