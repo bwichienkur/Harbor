@@ -116,7 +116,8 @@ export function SettingsPanel() {
           />
           <h3 className="panel-subhead">Shortcuts</h3>
           <p className="helper">
-            Space start/pause · C clear · M mini · 1/2/3 modes · Esc close · ? settings
+            Space start/pause · F fullscreen · C clear · M mini · 1/2/3 modes · Esc close · ?
+            settings
           </p>
           <button
             className="btn"

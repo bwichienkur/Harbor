@@ -1,6 +1,29 @@
 import { useEffect } from 'react'
 import { useAppStore } from '../store/useAppStore'
 
+type FullscreenElement = Element & {
+  webkitRequestFullscreen?: () => Promise<void> | void
+}
+
+type FullscreenDocument = Document & {
+  webkitFullscreenElement?: Element | null
+  webkitExitFullscreen?: () => Promise<void> | void
+}
+
+async function toggleDocumentFullscreen() {
+  const doc = document as FullscreenDocument
+  const active = document.fullscreenElement ?? doc.webkitFullscreenElement
+  if (active) {
+    if (document.exitFullscreen) await document.exitFullscreen()
+    else if (doc.webkitExitFullscreen) await doc.webkitExitFullscreen()
+    return
+  }
+  const target = (document.querySelector('.app-shell') ??
+    document.documentElement) as FullscreenElement
+  if (target.requestFullscreen) await target.requestFullscreen()
+  else if (target.webkitRequestFullscreen) await target.webkitRequestFullscreen()
+}
+
 export function useKeyboardShortcuts() {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -44,6 +67,11 @@ export function useKeyboardShortcuts() {
 
       if (event.key === 'c' || event.key === 'C') {
         if (state.mode !== 'home') state.toggleClearMode()
+        return
+      }
+
+      if (event.key === 'f' || event.key === 'F') {
+        void toggleDocumentFullscreen().catch(() => undefined)
         return
       }
 

@@ -4,6 +4,8 @@ import {
   Ellipsis,
   Focus,
   ListMusic,
+  Maximize2,
+  Minimize2,
   NotebookPen,
   Palette,
   Settings,
@@ -11,6 +13,7 @@ import {
   Volume2,
   X,
 } from 'lucide-react'
+import { useFullscreen } from '../hooks/useFullscreen'
 import { useAppStore } from '../store/useAppStore'
 
 const primaryTools = [
@@ -33,6 +36,7 @@ export function TopBar() {
   const toggleClearMode = useAppStore((s) => s.toggleClearMode)
   const mode = useAppStore((s) => s.mode)
   const showNotepad = useAppStore((s) => s.settings.showNotepad)
+  const { isFullscreen, toggleFullscreen } = useFullscreen()
   const [moreOpen, setMoreOpen] = useState(false)
   const moreRef = useRef<HTMLDivElement>(null)
 
@@ -55,11 +59,21 @@ export function TopBar() {
     return (
       <header className="top-bar clear-mode-bar">
         <button
+          type="button"
           className="btn clear-exit-btn"
           onClick={() => toggleClearMode()}
           title="Exit clear mode (Esc)"
         >
           <X size={16} aria-hidden /> Exit clear
+        </button>
+        <button
+          type="button"
+          className="btn clear-exit-btn"
+          onClick={() => void toggleFullscreen()}
+          title={isFullscreen ? 'Exit fullscreen (F)' : 'Fullscreen theme (F)'}
+        >
+          {isFullscreen ? <Minimize2 size={16} aria-hidden /> : <Maximize2 size={16} aria-hidden />}
+          {isFullscreen ? 'Exit full' : 'Fullscreen'}
         </button>
       </header>
     )
@@ -71,8 +85,28 @@ export function TopBar() {
         Harbor<span>.</span>
       </div>
       <nav className="icon-row" aria-label="Tools">
+        <button
+          type="button"
+          className={`icon-btn labeled ${isFullscreen ? 'active' : ''}`}
+          aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen background'}
+          title={
+            isFullscreen
+              ? 'Exit fullscreen (F)'
+              : 'Fullscreen — fill the screen with your theme (F)'
+          }
+          aria-pressed={isFullscreen}
+          onClick={() => void toggleFullscreen()}
+        >
+          {isFullscreen ? (
+            <Minimize2 size={18} strokeWidth={2} aria-hidden />
+          ) : (
+            <Maximize2 size={18} strokeWidth={2} aria-hidden />
+          )}
+          <span className="icon-label">{isFullscreen ? 'Exit' : 'Full'}</span>
+        </button>
         {(mode === 'focus' || mode === 'ambient') && (
           <button
+            type="button"
             className="icon-btn labeled"
             aria-label="Clear mode"
             title="Clear mode — hide chrome"
@@ -85,6 +119,7 @@ export function TopBar() {
         {primaryTools.map(({ id, label, Icon }) => (
           <button
             key={id}
+            type="button"
             className={`icon-btn labeled ${panel === id ? 'active' : ''}`}
             aria-label={label}
             title={label}
@@ -96,6 +131,7 @@ export function TopBar() {
         ))}
         <div className="more-menu" ref={moreRef}>
           <button
+            type="button"
             className={`icon-btn labeled ${moreOpen || visibleMoreTools.some((t) => t.id === panel) ? 'active' : ''}`}
             aria-label="More tools"
             aria-expanded={moreOpen}
@@ -110,6 +146,7 @@ export function TopBar() {
               {visibleMoreTools.map(({ id, label, Icon }) => (
                 <button
                   key={id}
+                  type="button"
                   role="menuitem"
                   className={panel === id ? 'active' : ''}
                   onClick={() => {
