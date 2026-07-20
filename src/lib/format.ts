@@ -1,5 +1,9 @@
 export function formatClock(date: Date) {
-  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  // Keep a compact wall-clock that visually matches timer digits (tabular, no seconds).
+  return date.toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+  })
 }
 
 export function formatTimer(totalSeconds: number) {

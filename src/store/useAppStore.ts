@@ -145,7 +145,7 @@ const defaultTimer: TimerSettings = {
 const defaultSettings: AppSettings = {
   name: '',
   showClock: true,
-  showQuotes: true,
+  showQuotes: false,
   showTasks: true,
   showNotepad: true,
   overlayStrength: 0.45,

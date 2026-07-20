@@ -32,6 +32,7 @@ export function TopBar() {
   const clearMode = useAppStore((s) => s.clearMode)
   const toggleClearMode = useAppStore((s) => s.toggleClearMode)
   const mode = useAppStore((s) => s.mode)
+  const showNotepad = useAppStore((s) => s.settings.showNotepad)
   const [moreOpen, setMoreOpen] = useState(false)
   const moreRef = useRef<HTMLDivElement>(null)
 
@@ -43,6 +44,12 @@ export function TopBar() {
     document.addEventListener('mousedown', onDoc)
     return () => document.removeEventListener('mousedown', onDoc)
   }, [moreOpen])
+
+  useEffect(() => {
+    if (!showNotepad && panel === 'notepad') setPanel('none')
+  }, [showNotepad, panel, setPanel])
+
+  const visibleMoreTools = moreTools.filter((t) => t.id !== 'notepad' || showNotepad)
 
   if (clearMode) {
     return (
@@ -89,7 +96,7 @@ export function TopBar() {
         ))}
         <div className="more-menu" ref={moreRef}>
           <button
-            className={`icon-btn labeled ${moreOpen || moreTools.some((t) => t.id === panel) ? 'active' : ''}`}
+            className={`icon-btn labeled ${moreOpen || visibleMoreTools.some((t) => t.id === panel) ? 'active' : ''}`}
             aria-label="More tools"
             aria-expanded={moreOpen}
             title="More"
@@ -100,7 +107,7 @@ export function TopBar() {
           </button>
           {moreOpen && (
             <div className="more-dropdown" role="menu">
-              {moreTools.map(({ id, label, Icon }) => (
+              {visibleMoreTools.map(({ id, label, Icon }) => (
                 <button
                   key={id}
                   role="menuitem"

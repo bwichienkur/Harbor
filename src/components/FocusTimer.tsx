@@ -175,11 +175,12 @@ export function FocusTimer() {
     mode === 'ambient' && phase === 'focus' ? 'Break space' : phaseCopy[phase]
   const scale = local.width / DEFAULT_TIMER_WIDTH
   const progress = phaseProgress(timerSettings, phase, remainingMs, elapsedMs)
-  const radius = 54
+  const radius = 52
   const circumference = 2 * Math.PI * radius
   const dashOffset = circumference * (1 - progress)
   const compactChrome = running && !hovered && !interacting && !clearMode
   const breakTone = phase === 'shortBreak' || phase === 'longBreak' || mode === 'ambient'
+  const timeLabel = formatTimer(displayMs / 1000)
 
   return (
     <section
@@ -268,7 +269,9 @@ export function FocusTimer() {
             strokeDashoffset={dashOffset}
           />
         </svg>
-        <div className="timer-digits">{formatTimer(displayMs / 1000)}</div>
+        <div className="timer-digits time-display" aria-label={timeLabel}>
+          {timeLabel}
+        </div>
       </div>
 
       {(topTask || !running) && (

@@ -68,19 +68,19 @@ export function SettingsPanel() {
             />
           </div>
           <Toggle
-            label="Show clock"
+            label="Show clock on home"
             on={settings.showClock}
             onToggle={() => updateSettings({ showClock: !settings.showClock })}
           />
           <Toggle
-            label="Show quotes"
-            on={settings.showQuotes}
-            onToggle={() => updateSettings({ showQuotes: !settings.showQuotes })}
-          />
-          <Toggle
-            label="Show priority task"
+            label="Show Add Task on home"
             on={settings.showTasks}
             onToggle={() => updateSettings({ showTasks: !settings.showTasks })}
+          />
+          <Toggle
+            label="Show notepad in tools"
+            on={settings.showNotepad}
+            onToggle={() => updateSettings({ showNotepad: !settings.showNotepad })}
           />
           <Toggle
             label="Soft clear chrome while focusing"
@@ -299,6 +299,7 @@ function Toggle({
     <div className="toggle-row">
       <span>{label}</span>
       <button
+        type="button"
         className={`switch ${on ? 'on' : ''}`}
         role="switch"
         aria-checked={on}

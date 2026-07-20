@@ -1,6 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { quoteForToday } from '../data/quotes'
-import { formatClock, greetingFor } from '../lib/format'
+import { formatClock } from '../lib/format'
 import { useNow } from '../hooks/useNow'
 import { useAppStore } from '../store/useAppStore'
 
@@ -11,10 +10,6 @@ export function HeroStage() {
   const clearMode = useAppStore((s) => s.clearMode)
   const running = useAppStore((s) => s.running)
   const setPanel = useAppStore((s) => s.setPanel)
-  const setMode = useAppStore((s) => s.setMode)
-  const tasks = useAppStore((s) => s.tasks)
-  const quote = quoteForToday(now)
-  const topTask = tasks.find((t) => !t.done)
   const softHideHint = mode === 'focus' && running && settings.softClearFocus
 
   return (
@@ -29,33 +24,13 @@ export function HeroStage() {
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="greeting text-scrim">
-              {greetingFor(now.getHours(), settings.name)}
-            </div>
-            {settings.showClock && <div className="clock text-scrim">{formatClock(now)}</div>}
-            {settings.showQuotes && <p className="quote text-scrim">“{quote.text}”</p>}
-            {settings.showTasks && topTask && (
-              <div className="priority-chip">
-                Next up{topTask.eta ? ` · ${topTask.eta}` : ''}: {topTask.text}
-              </div>
+            {settings.showClock && (
+              <div className="clock time-display text-scrim">{formatClock(now)}</div>
             )}
-            {!topTask && settings.showTasks && (
-              <div className="empty-home">
-                <p className="priority-chip">No tasks yet — plan one focus item for today.</p>
-                <div className="timer-controls">
-                  <button className="btn primary" onClick={() => setPanel('tasks')}>
-                    Add a task
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={() => {
-                      setMode('focus')
-                    }}
-                  >
-                    Start focusing anyway
-                  </button>
-                </div>
-              </div>
+            {settings.showTasks && (
+              <button className="btn primary home-add-task" onClick={() => setPanel('tasks')}>
+                Add Task
+              </button>
             )}
           </motion.div>
         ) : mode !== 'home' && !clearMode && !softHideHint ? (
