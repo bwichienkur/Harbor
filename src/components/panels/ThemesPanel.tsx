@@ -1,5 +1,5 @@
-import { Sparkles, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { atmospherePresets } from '../../data/atmospherePresets'
 import { curatedEnvironments, envCategories, findEnvironment } from '../../data/environments'
 import type {
   DashMode,
@@ -11,17 +11,8 @@ import type {
 } from '../../types'
 import { useAppStore } from '../../store/useAppStore'
 
-type Filter = EnvCategory | 'all' | 'animated' | 'mine'
-type Tab = 'generate' | 'library' | 'tune'
-
-const EXAMPLE_PROMPTS = [
-  'A cozy library during a thunderstorm.',
-  'A quiet Japanese café overlooking cherry blossoms.',
-  'A mountain cabin at sunrise with a fireplace.',
-  'A rooftop café in Italy during golden hour.',
-  'A train traveling through snowy mountains.',
-  'A futuristic cyberpunk apartment during heavy rain.',
-]
+type Filter = EnvCategory | 'all' | 'animated'
+type Tab = 'library' | 'tune'
 
 export function ThemesPanel() {
   const mode = useAppStore((s) => s.mode)
@@ -35,15 +26,12 @@ export function ThemesPanel() {
   const setTheme = useAppStore((s) => s.setTheme)
   const setCustomBackground = useAppStore((s) => s.setCustomBackground)
   const updateSettings = useAppStore((s) => s.updateSettings)
-  const generateEnvironment = useAppStore((s) => s.generateEnvironment)
   const updateActiveEnvironment = useAppStore((s) => s.updateActiveEnvironment)
+  const applyAtmospherePreset = useAppStore((s) => s.applyAtmospherePreset)
   const removeCustomEnvironment = useAppStore((s) => s.removeCustomEnvironment)
 
-  const [tab, setTab] = useState<Tab>('generate')
+  const [tab, setTab] = useState<Tab>('library')
   const [filter, setFilter] = useState<Filter>('animated')
-  const [prompt, setPrompt] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [status, setStatus] = useState('')
 
   const slot: DashMode = mode
   const activeId =
@@ -60,42 +48,32 @@ export function ThemesPanel() {
   const activeEnv = findEnvironment(activeId, customEnvironments)
 
   const catalog = useMemo(() => {
-    const mine = customEnvironments
-    const all = [...mine, ...curatedEnvironments]
-    return all.filter((env) => {
+    const personalized = customEnvironments.filter((e) => !e.curated)
+    const seen = new Set<string>()
+    const merged = [...personalized, ...curatedEnvironments].filter((env) => {
+      if (seen.has(env.id)) return false
+      seen.add(env.id)
+      return true
+    })
+    return merged.filter((env) => {
       if (filter === 'all') return true
       if (filter === 'animated') return Boolean(env.animated && env.video)
-      if (filter === 'mine') return !env.curated
       return env.category === filter
     })
   }, [customEnvironments, filter])
 
-  const onGenerate = () => {
-    const text = prompt.trim()
-    if (!text) return
-    setBusy(true)
-    setStatus('Interpreting scene…')
-    window.setTimeout(() => {
-      const env = generateEnvironment(text, slot)
-      setStatus(`Created “${env.name}”`)
-      setBusy(false)
-      setTab('tune')
-    }, 280)
-  }
-
   return (
     <div className="panel-section">
       <p className="helper">
-        Immersive focus environments for <strong>{slot}</strong> — curated worlds or describe your
-        own.
+        Cinematic focus environments for <strong>{slot}</strong> — fixed camera, subtle life in the
+        frame.
       </p>
 
       <div className="settings-tabs" role="tablist" aria-label="Environment sections">
         {(
           [
-            ['generate', 'Create'],
             ['library', 'Library'],
-            ['tune', 'Tune'],
+            ['tune', 'Atmosphere'],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -110,46 +88,6 @@ export function ThemesPanel() {
           </button>
         ))}
       </div>
-
-      {tab === 'generate' && (
-        <>
-          <div className="field">
-            <label htmlFor="env-prompt">Describe your focus environment</label>
-            <textarea
-              id="env-prompt"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Quiet cabin overlooking a frozen lake…"
-              rows={4}
-            />
-          </div>
-          <button
-            type="button"
-            className="btn primary"
-            disabled={busy || !prompt.trim()}
-            onClick={onGenerate}
-          >
-            <Sparkles size={16} aria-hidden /> {busy ? 'Composing…' : 'Generate environment'}
-          </button>
-          {status && <p className="helper">{status}</p>}
-          <div className="eta-row duration-quicks">
-            {EXAMPLE_PROMPTS.map((example) => (
-              <button
-                key={example}
-                type="button"
-                className="chip"
-                onClick={() => setPrompt(example)}
-              >
-                {example.length > 36 ? `${example.slice(0, 34)}…` : example}
-              </button>
-            ))}
-          </div>
-          <p className="helper">
-            Harbor expands your prompt into a full scene, paints an AI still, layers subtle weather
-            and sound, and can blend a looping live base when it fits.
-          </p>
-        </>
-      )}
 
       {tab === 'library' && (
         <>
@@ -238,7 +176,7 @@ export function ThemesPanel() {
                 <button
                   key={env.id}
                   type="button"
-                  className={`theme-card ${applied ? 'active' : ''} ${env.animated ? 'theme-card-live' : ''} ${!env.curated ? 'theme-card-ai' : ''}`}
+                  className={`theme-card ${applied ? 'active' : ''} ${env.animated ? 'theme-card-live' : ''}`}
                   onClick={() => {
                     setCustomBackground(null)
                     updateSettings({ [videoKey]: '' })
@@ -248,29 +186,8 @@ export function ThemesPanel() {
                 >
                   <img src={env.image} alt="" loading="lazy" decoding="async" />
                   {env.animated && <em className="theme-live">Live</em>}
-                  {!env.curated && <em className="theme-ai">AI</em>}
                   {applied && <em className="theme-applied">Applied</em>}
                   <span>{env.name}</span>
-                  {!env.curated && (
-                    <span
-                      className="theme-delete"
-                      role="button"
-                      tabIndex={0}
-                      title="Remove saved environment"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        removeCustomEnvironment(env.id)
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.stopPropagation()
-                          removeCustomEnvironment(env.id)
-                        }
-                      }}
-                    >
-                      <Trash2 size={12} />
-                    </span>
-                  )}
                 </button>
               )
             })}
@@ -283,9 +200,24 @@ export function ThemesPanel() {
           {activeEnv ? (
             <>
               <p className="helper">
-                Tuning <strong>{activeEnv.name}</strong>
-                {activeEnv.prompt ? ` · “${activeEnv.prompt}”` : ''}
+                Atmosphere for <strong>{activeEnv.name}</strong>
               </p>
+
+              <h3 className="panel-subhead">Presets</h3>
+              <div className="eta-row">
+                {atmospherePresets.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    className="chip"
+                    title={preset.description}
+                    onClick={() => applyAtmospherePreset(preset.id)}
+                  >
+                    {preset.name}
+                  </button>
+                ))}
+              </div>
+
               <TuneSlider
                 label="Animation intensity"
                 value={activeEnv.personalization.animationIntensity}
@@ -293,6 +225,25 @@ export function ThemesPanel() {
                 max={1}
                 onChange={(v) => updateActiveEnvironment({ animationIntensity: v })}
               />
+              {(activeEnv.personalization.weather === 'rain' ||
+                activeEnv.personalization.weather === 'storm') && (
+                <TuneSlider
+                  label="Rain amount"
+                  value={activeEnv.personalization.rainAmount ?? 0.45}
+                  min={0}
+                  max={1}
+                  onChange={(v) => updateActiveEnvironment({ rainAmount: v })}
+                />
+              )}
+              {activeEnv.personalization.weather === 'snow' && (
+                <TuneSlider
+                  label="Snow amount"
+                  value={activeEnv.personalization.snowAmount ?? 0.4}
+                  min={0}
+                  max={1}
+                  onChange={(v) => updateActiveEnvironment({ snowAmount: v })}
+                />
+              )}
               <TuneSlider
                 label="Brightness"
                 value={activeEnv.personalization.brightness}
@@ -318,44 +269,47 @@ export function ThemesPanel() {
                 label="Weather"
                 value={activeEnv.personalization.weather}
                 options={['none', 'rain', 'snow', 'fog', 'storm', 'dust']}
-                onChange={(v) =>
-                  updateActiveEnvironment({ weather: v as WeatherKind }, { regenerateImage: true })
-                }
+                onChange={(v) => updateActiveEnvironment({ weather: v as WeatherKind })}
               />
               <TuneSelect
                 label="Time of day"
                 value={activeEnv.personalization.timeOfDay}
                 options={['dawn', 'morning', 'afternoon', 'golden', 'blue', 'night']}
-                onChange={(v) =>
-                  updateActiveEnvironment({ timeOfDay: v as TimeOfDay }, { regenerateImage: true })
-                }
+                onChange={(v) => updateActiveEnvironment({ timeOfDay: v as TimeOfDay })}
               />
               <TuneSelect
                 label="Season"
                 value={activeEnv.personalization.season}
                 options={['spring', 'summer', 'autumn', 'winter']}
-                onChange={(v) =>
-                  updateActiveEnvironment({ season: v as Season }, { regenerateImage: true })
-                }
+                onChange={(v) => updateActiveEnvironment({ season: v as Season })}
               />
               <TuneSelect
                 label="Viewpoint"
                 value={activeEnv.personalization.viewpoint}
-                options={['desk', 'window', 'couch', 'reading', 'booth', 'balcony', 'train', 'rooftop']}
-                onChange={(v) =>
-                  updateActiveEnvironment({ viewpoint: v as Viewpoint }, { regenerateImage: true })
-                }
+                options={[
+                  'desk',
+                  'window',
+                  'couch',
+                  'reading',
+                  'booth',
+                  'balcony',
+                  'train',
+                  'rooftop',
+                ]}
+                onChange={(v) => updateActiveEnvironment({ viewpoint: v as Viewpoint })}
               />
-              <button
-                type="button"
-                className="btn"
-                onClick={() => updateActiveEnvironment({}, { regenerateImage: true })}
-              >
-                Regenerate scene image
-              </button>
+              {!activeEnv.curated && (
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => removeCustomEnvironment(activeEnv.id)}
+                >
+                  Reset to library defaults
+                </button>
+              )}
             </>
           ) : (
-            <p className="helper">Select or generate an environment first.</p>
+            <p className="helper">Choose an environment from the library first.</p>
           )}
         </>
       )}
@@ -380,7 +334,10 @@ function TuneSlider({
     <div className="field duration-field">
       <div className="duration-label-row">
         <label>{label}</label>
-        <strong>{Math.round(value * (max <= 1.5 ? 100 : 1))}{max <= 1.5 ? '%' : ''}</strong>
+        <strong>
+          {Math.round(value * (max <= 1.5 ? 100 : 1))}
+          {max <= 1.5 ? '%' : ''}
+        </strong>
       </div>
       <input
         type="range"

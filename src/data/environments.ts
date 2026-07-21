@@ -1,443 +1,840 @@
-import type { EnvCategory, FocusEnvironment } from '../types'
+import type { EnvCategory, FocusEnvironment, WeatherKind } from '../types'
 import { defaultPersonalization, soundLayer } from '../lib/environments/defaults'
-import { themes } from './themes'
+import type { AmbientSoundKind } from '../types'
 
-function env(
-  partial: Omit<FocusEnvironment, 'curated' | 'createdAt' | 'personalization' | 'soundLayers'> & {
-    personalization?: Partial<FocusEnvironment['personalization']>
-    sounds?: Parameters<typeof soundLayer>[0][]
-  },
-): FocusEnvironment {
-  const sounds = partial.sounds ?? ['white']
+const V = {
+  rainyDesk: 'https://assets.mixkit.co/videos/2846/2846-720.mp4',
+  openRain: 'https://assets.mixkit.co/videos/28085/28085-720.mp4',
+  foggyGlass: 'https://assets.mixkit.co/videos/18308/18308-720.mp4',
+  tabletWindow: 'https://assets.mixkit.co/videos/14606/14606-720.mp4',
+  devCoffee: 'https://assets.mixkit.co/videos/1749/1749-720.mp4',
+  laptopCafe: 'https://assets.mixkit.co/videos/206/206-720.mp4',
+  readingCafe: 'https://assets.mixkit.co/videos/237/237-720.mp4',
+  urbanCoffee: 'https://assets.mixkit.co/videos/4350/4350-720.mp4',
+  cityOffice: 'https://assets.mixkit.co/videos/14279/14279-720.mp4',
+  highrise: 'https://assets.mixkit.co/videos/13218/13218-720.mp4',
+  openOffice: 'https://assets.mixkit.co/videos/914/914-720.mp4',
+  busyOffice: 'https://assets.mixkit.co/videos/918/918-720.mp4',
+} as const
+
+const I = {
+  europeanLibrary:
+    'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1920&q=70',
+  universityLibrary:
+    'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1920&q=70',
+  japaneseRoom:
+    'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?auto=format&fit=crop&w=1920&q=70',
+  mansionLibrary:
+    'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1920&q=70',
+  rainyBooks:
+    'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=1920&q=70',
+  sunsetLibrary:
+    'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1920&q=70',
+  mountainBooks:
+    'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?auto=format&fit=crop&w=1920&q=70',
+  nightLibrary:
+    'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=1920&q=70',
+  fireplaceRoom:
+    'https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1920&q=70',
+  archedWindows:
+    'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1920&q=70',
+  parisCafe:
+    'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1920&q=70',
+  tokyoCafe:
+    'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1920&q=70',
+  mountainCafe:
+    'https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1920&q=70',
+  lakeCafe:
+    'https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=1920&q=70',
+  coastal:
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=70',
+  italianCafe:
+    'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1920&q=70',
+  hotelLounge:
+    'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=70',
+  forest:
+    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1920&q=70',
+  snowCabin:
+    'https://images.unsplash.com/photo-1517824806704-9040b037703b?auto=format&fit=crop&w=1920&q=70',
+  cabinWoods:
+    'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?auto=format&fit=crop&w=1920&q=70',
+  mountainLodge:
+    'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=70',
+  beachSunset:
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=70',
+  lakeDock:
+    'https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=1920&q=70',
+  garden:
+    'https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1920&q=70',
+  cherry:
+    'https://images.unsplash.com/photo-1522383225653-ed111181a951?auto=format&fit=crop&w=1920&q=70',
+  zen:
+    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1920&q=70',
+  river:
+    'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=1920&q=70',
+  greenhouse:
+    'https://images.unsplash.com/photo-1466692476866-aef614ec2d7e?auto=format&fit=crop&w=1920&q=70',
+  apartment:
+    'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1920&q=70',
+  loft:
+    'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1920&q=70',
+  scandi:
+    'https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?auto=format&fit=crop&w=1920&q=70',
+  rooftop:
+    'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1920&q=70',
+  penthouse:
+    'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1920&q=70',
+  train:
+    'https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=1920&q=70',
+  airport:
+    'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1920&q=70',
+  cowork:
+    'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1920&q=70',
+  museum:
+    'https://images.unsplash.com/photo-1564399580075-5dfe19c2051d?auto=format&fit=crop&w=1920&q=70',
+  autumnPorch:
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1920&q=70',
+  storm:
+    'https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?auto=format&fit=crop&w=1920&q=70',
+  fog:
+    'https://images.unsplash.com/photo-1487621167305-5d248087c724?auto=format&fit=crop&w=1920&q=70',
+  cityNight:
+    'https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=1920&q=70',
+  deskSun:
+    'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1920&q=70',
+  deskNight:
+    'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1920&q=70',
+  officeGlass:
+    'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1920&q=70',
+  rainyWindow:
+    'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=1920&q=70',
+} as const
+
+type Spec = {
+  id: string
+  name: string
+  category: EnvCategory
+  image: string
+  video?: string
+  tags?: string[]
+  weather?: WeatherKind
+  timeOfDay?: FocusEnvironment['personalization']['timeOfDay']
+  season?: FocusEnvironment['personalization']['season']
+  viewpoint?: FocusEnvironment['personalization']['viewpoint']
+  overlay?: number
+  brightness?: number
+  intensity?: number
+  sounds?: AmbientSoundKind[]
+}
+
+function env(spec: Spec): FocusEnvironment {
+  const sounds = spec.sounds ?? ['white']
   return {
-    id: partial.id,
-    name: partial.name,
-    category: partial.category,
-    image: partial.image,
-    video: partial.video,
-    animated: partial.animated,
-    prompt: partial.prompt,
-    refinedPrompt: partial.refinedPrompt,
-    tags: partial.tags,
+    id: spec.id,
+    name: spec.name,
+    category: spec.category,
+    image: spec.image,
+    video: spec.video,
+    animated: Boolean(spec.video),
     curated: true,
+    tags: spec.tags ?? [spec.category],
     createdAt: 0,
-    personalization: { ...defaultPersonalization(), ...partial.personalization },
-    soundLayers: sounds.map((id, i) => soundLayer(id, true, i === 0 ? 0.36 : 0.2)),
+    personalization: {
+      ...defaultPersonalization(),
+      weather: spec.weather ?? 'none',
+      timeOfDay: spec.timeOfDay ?? 'afternoon',
+      season: spec.season ?? 'autumn',
+      viewpoint: spec.viewpoint ?? 'desk',
+      overlay: spec.overlay ?? 0.44,
+      brightness: spec.brightness ?? 1,
+      animationIntensity: spec.intensity ?? 0.4,
+    },
+    soundLayers: sounds.map((id, i) => soundLayer(id, true, i === 0 ? 0.36 : 0.18)),
   }
 }
 
-const fromThemes: FocusEnvironment[] = themes.map((t) =>
+export const curatedEnvironments: FocusEnvironment[] = [
+  // —— Live looping bases (subtle ambient video) ——
   env({
-    id: t.id,
-    name: t.name,
-    category: t.category,
-    image: t.image,
-    video: t.video,
-    animated: t.animated,
-    tags: [t.category, t.animated ? 'animated' : 'still'],
-    personalization: { overlay: t.overlay },
-    sounds:
-      t.category === 'cafe'
-        ? ['cafe']
-        : t.id.includes('rain')
-          ? ['rain']
-          : t.category === 'library'
-            ? ['pages']
-            : ['white'],
+    id: 'rainy-window-desk',
+    name: 'Rainy Window Desk',
+    category: 'desk',
+    image: I.rainyWindow,
+    video: V.rainyDesk,
+    weather: 'rain',
+    sounds: ['rain'],
+    tags: ['live', 'rain', 'desk'],
   }),
-)
-
-const curatedExtras: FocusEnvironment[] = [
-  // Libraries
   env({
-    id: 'historic-european-library',
-    name: 'Historic European Library',
+    id: 'open-window-rain',
+    name: 'Open Window Rain',
+    category: 'desk',
+    image: I.rainyWindow,
+    video: V.openRain,
+    weather: 'rain',
+    sounds: ['rain', 'wind'],
+    tags: ['live', 'rain'],
+  }),
+  env({
+    id: 'foggy-rain-glass',
+    name: 'Foggy Rain Glass',
+    category: 'desk',
+    image: I.fog,
+    video: V.foggyGlass,
+    weather: 'fog',
+    sounds: ['rain'],
+    tags: ['live', 'fog'],
+  }),
+  env({
+    id: 'tablet-by-window',
+    name: 'Tablet by the Window',
+    category: 'desk',
+    image: I.deskSun,
+    video: V.tabletWindow,
+    sounds: ['birds', 'white'],
+    tags: ['live', 'desk'],
+  }),
+  env({
+    id: 'dev-coffee-desk',
+    name: 'Dev + Coffee',
+    category: 'desk',
+    image: I.deskSun,
+    video: V.devCoffee,
+    sounds: ['keyboard', 'cafe'],
+    tags: ['live', 'desk'],
+  }),
+  env({
+    id: 'laptop-cafe-live',
+    name: 'Laptop Café',
+    category: 'cafe',
+    image: I.parisCafe,
+    video: V.laptopCafe,
+    viewpoint: 'booth',
+    sounds: ['cafe'],
+    tags: ['live', 'cafe'],
+  }),
+  env({
+    id: 'reading-cafe-live',
+    name: 'Reading Café',
+    category: 'cafe',
+    image: I.tokyoCafe,
+    video: V.readingCafe,
+    viewpoint: 'reading',
+    sounds: ['cafe', 'pages'],
+    tags: ['live', 'cafe'],
+  }),
+  env({
+    id: 'urban-coffee-live',
+    name: 'Urban Coffee Shop',
+    category: 'cafe',
+    image: I.italianCafe,
+    video: V.urbanCoffee,
+    sounds: ['cafe'],
+    tags: ['live', 'cafe'],
+  }),
+  env({
+    id: 'city-window-office',
+    name: 'City Window Office',
+    category: 'office',
+    image: I.officeGlass,
+    video: V.cityOffice,
+    viewpoint: 'window',
+    sounds: ['white', 'keyboard'],
+    tags: ['live', 'city'],
+  }),
+  env({
+    id: 'highrise-window',
+    name: 'Highrise Window',
+    category: 'city',
+    image: I.officeGlass,
+    video: V.highrise,
+    viewpoint: 'window',
+    sounds: ['white'],
+    tags: ['live', 'city'],
+  }),
+  env({
+    id: 'open-office-live',
+    name: 'Quiet Open Office',
+    category: 'office',
+    image: I.cowork,
+    video: V.openOffice,
+    sounds: ['keyboard', 'white'],
+    tags: ['live', 'office'],
+  }),
+  env({
+    id: 'busy-office-live',
+    name: 'Modern Office Floor',
+    category: 'office',
+    image: I.cowork,
+    video: V.busyOffice,
+    intensity: 0.3,
+    sounds: ['keyboard', 'cafe'],
+    tags: ['live', 'office'],
+  }),
+
+  // —— Libraries ——
+  env({
+    id: 'old-european-library',
+    name: 'Old European Library',
     category: 'library',
-    image:
-      'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1920&q=70',
-    tags: ['library', 'historic', 'europe'],
-    personalization: { timeOfDay: 'afternoon', viewpoint: 'reading', overlay: 0.48 },
+    image: I.europeanLibrary,
+    viewpoint: 'reading',
+    weather: 'dust',
     sounds: ['pages', 'clock'],
+    tags: ['library', 'europe'],
+  }),
+  env({
+    id: 'modern-university-library',
+    name: 'Modern University Library',
+    category: 'library',
+    image: I.universityLibrary,
+    sounds: ['pages', 'white'],
+    tags: ['library', 'university'],
   }),
   env({
     id: 'japanese-reading-room',
     name: 'Japanese Reading Room',
     category: 'library',
-    image:
-      'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?auto=format&fit=crop&w=1920&q=70',
-    tags: ['library', 'japanese', 'zen'],
-    personalization: { season: 'spring', viewpoint: 'reading', weather: 'none' },
+    image: I.japaneseRoom,
+    season: 'spring',
+    viewpoint: 'reading',
     sounds: ['birds', 'pages'],
+    tags: ['library', 'japanese'],
   }),
   env({
-    id: 'fireplace-library',
-    name: 'Fireplace Library',
+    id: 'private-mansion-library',
+    name: 'Private Mansion Library',
     category: 'library',
-    image:
-      'https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1920&q=70',
-    tags: ['library', 'fireplace', 'cozy'],
-    personalization: { weather: 'none', timeOfDay: 'night', overlay: 0.5 },
-    sounds: ['fire', 'pages'],
+    image: I.mansionLibrary,
+    timeOfDay: 'afternoon',
+    viewpoint: 'reading',
+    sounds: ['pages', 'clock'],
+    tags: ['library', 'mansion'],
   }),
   env({
     id: 'rainy-library',
     name: 'Rainy Library',
     category: 'library',
-    image:
-      'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=1920&q=70',
-    video: 'https://assets.mixkit.co/videos/2846/2846-720.mp4',
-    animated: true,
-    tags: ['library', 'rain'],
-    personalization: { weather: 'rain', timeOfDay: 'afternoon' },
+    image: I.rainyBooks,
+    video: V.rainyDesk,
+    weather: 'rain',
     sounds: ['rain', 'pages'],
+    tags: ['library', 'rain', 'live'],
+  }),
+  env({
+    id: 'library-at-sunset',
+    name: 'Library at Sunset',
+    category: 'library',
+    image: I.sunsetLibrary,
+    timeOfDay: 'golden',
+    viewpoint: 'window',
+    sounds: ['pages', 'birds'],
+    tags: ['library', 'sunset'],
+  }),
+  env({
+    id: 'library-overlooking-mountains',
+    name: 'Library Overlooking Mountains',
+    category: 'library',
+    image: I.mountainBooks,
+    viewpoint: 'window',
+    season: 'autumn',
+    sounds: ['wind', 'pages'],
+    tags: ['library', 'mountain'],
   }),
   env({
     id: 'night-library',
     name: 'Night Library',
     category: 'library',
-    image:
-      'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1920&q=70',
-    tags: ['library', 'night'],
-    personalization: { timeOfDay: 'night', brightness: 0.88 },
+    image: I.nightLibrary,
+    timeOfDay: 'night',
+    brightness: 0.88,
     sounds: ['pages', 'clock'],
+    tags: ['library', 'night'],
   }),
   env({
-    id: 'mountain-library',
-    name: 'Mountain Library',
+    id: 'library-with-fireplace',
+    name: 'Library with Fireplace',
     category: 'library',
-    image:
-      'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1920&q=70',
-    tags: ['library', 'mountain'],
-    personalization: { season: 'autumn', viewpoint: 'window' },
-    sounds: ['wind', 'pages'],
+    image: I.fireplaceRoom,
+    timeOfDay: 'night',
+    sounds: ['fire', 'pages'],
+    tags: ['library', 'fireplace'],
+  }),
+  env({
+    id: 'library-arched-windows',
+    name: 'Library with Arched Windows',
+    category: 'library',
+    image: I.archedWindows,
+    viewpoint: 'window',
+    weather: 'dust',
+    sounds: ['pages', 'birds'],
+    tags: ['library', 'windows'],
   }),
 
-  // Cafés
+  // —— Cafés ——
+  env({
+    id: 'rainy-cafe',
+    name: 'Rainy Café',
+    category: 'cafe',
+    image: I.parisCafe,
+    video: V.laptopCafe,
+    weather: 'rain',
+    viewpoint: 'booth',
+    sounds: ['rain', 'cafe'],
+    tags: ['cafe', 'rain', 'live'],
+  }),
   env({
     id: 'paris-cafe',
     name: 'Paris Café',
     category: 'cafe',
-    image:
-      'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1920&q=70',
-    video: 'https://assets.mixkit.co/videos/206/206-720.mp4',
-    animated: true,
-    tags: ['cafe', 'paris'],
-    personalization: { timeOfDay: 'golden', viewpoint: 'booth' },
+    image: I.parisCafe,
+    video: V.urbanCoffee,
+    timeOfDay: 'golden',
+    viewpoint: 'booth',
     sounds: ['cafe'],
+    tags: ['cafe', 'paris', 'live'],
   }),
   env({
     id: 'tokyo-cafe',
     name: 'Tokyo Café',
     category: 'cafe',
-    image:
-      'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1920&q=70',
-    tags: ['cafe', 'tokyo'],
-    personalization: { season: 'spring', viewpoint: 'window' },
+    image: I.tokyoCafe,
+    video: V.readingCafe,
+    season: 'spring',
+    viewpoint: 'window',
     sounds: ['cafe', 'rain'],
-  }),
-  env({
-    id: 'coastal-cafe',
-    name: 'Coastal Café',
-    category: 'cafe',
-    image:
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=70',
-    tags: ['cafe', 'coast'],
-    personalization: { season: 'summer', timeOfDay: 'morning', viewpoint: 'window' },
-    sounds: ['ocean', 'cafe'],
-  }),
-  env({
-    id: 'italian-cafe-golden',
-    name: 'Italian Café · Golden Hour',
-    category: 'cafe',
-    image:
-      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1920&q=70',
-    tags: ['cafe', 'italy', 'golden'],
-    personalization: { timeOfDay: 'golden', viewpoint: 'booth' },
-    sounds: ['cafe'],
-  }),
-  env({
-    id: 'book-cafe',
-    name: 'Book Café',
-    category: 'cafe',
-    image:
-      'https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1920&q=70',
-    tags: ['cafe', 'books'],
-    personalization: { viewpoint: 'reading' },
-    sounds: ['cafe', 'pages'],
+    tags: ['cafe', 'tokyo', 'live'],
   }),
   env({
     id: 'mountain-cafe',
     name: 'Mountain Café',
     category: 'cafe',
-    image:
-      'https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1920&q=70',
-    tags: ['cafe', 'mountain'],
-    personalization: { season: 'winter', weather: 'snow' },
+    image: I.mountainCafe,
+    season: 'winter',
+    weather: 'snow',
     sounds: ['cafe', 'wind'],
+    tags: ['cafe', 'mountain'],
+  }),
+  env({
+    id: 'lakefront-cafe',
+    name: 'Lakefront Café',
+    category: 'cafe',
+    image: I.lakeCafe,
+    viewpoint: 'window',
+    timeOfDay: 'morning',
+    sounds: ['birds', 'cafe'],
+    tags: ['cafe', 'lake'],
+  }),
+  env({
+    id: 'book-cafe',
+    name: 'Book Café',
+    category: 'cafe',
+    image: I.fireplaceRoom,
+    viewpoint: 'reading',
+    sounds: ['cafe', 'pages'],
+    tags: ['cafe', 'books'],
+  }),
+  env({
+    id: 'coastal-cafe',
+    name: 'Coastal Café',
+    category: 'cafe',
+    image: I.coastal,
+    season: 'summer',
+    timeOfDay: 'morning',
+    viewpoint: 'window',
+    sounds: ['ocean', 'cafe'],
+    tags: ['cafe', 'coast'],
+  }),
+  env({
+    id: 'coffee-roastery',
+    name: 'Coffee Roastery',
+    category: 'cafe',
+    image: I.italianCafe,
+    sounds: ['cafe', 'white'],
+    tags: ['cafe', 'roastery'],
+  }),
+  env({
+    id: 'forest-cafe',
+    name: 'Forest Café',
+    category: 'cafe',
+    image: I.forest,
+    season: 'autumn',
+    sounds: ['birds', 'cafe'],
+    tags: ['cafe', 'forest'],
+  }),
+  env({
+    id: 'small-italian-cafe',
+    name: 'Small Italian Café',
+    category: 'cafe',
+    image: I.italianCafe,
+    timeOfDay: 'golden',
+    viewpoint: 'booth',
+    sounds: ['cafe'],
+    tags: ['cafe', 'italy'],
+  }),
+  env({
+    id: 'quiet-hotel-lounge',
+    name: 'Quiet Hotel Lounge',
+    category: 'cafe',
+    image: I.hotelLounge,
+    viewpoint: 'couch',
+    timeOfDay: 'night',
+    sounds: ['cafe', 'white'],
+    tags: ['cafe', 'hotel'],
   }),
 
-  // Nature
+  // —— Nature ——
   env({
-    id: 'forest-cabin',
-    name: 'Forest Cabin',
+    id: 'cabin-snowy-woods',
+    name: 'Cabin in Snowy Woods',
     category: 'nature',
-    image:
-      'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?auto=format&fit=crop&w=1920&q=70',
-    tags: ['nature', 'cabin', 'forest'],
-    personalization: { weather: 'none', viewpoint: 'desk', season: 'autumn' },
-    sounds: ['birds', 'fire'],
+    image: I.snowCabin,
+    weather: 'snow',
+    season: 'winter',
+    timeOfDay: 'night',
+    sounds: ['fire', 'wind'],
+    tags: ['nature', 'cabin', 'snow'],
   }),
   env({
-    id: 'lake-dock',
-    name: 'Lake Dock',
+    id: 'cabin-during-rain',
+    name: 'Cabin During Rain',
     category: 'nature',
-    image:
-      'https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=1920&q=70',
-    tags: ['nature', 'lake'],
-    personalization: { timeOfDay: 'dawn', viewpoint: 'window' },
+    image: I.cabinWoods,
+    video: V.openRain,
+    weather: 'rain',
+    sounds: ['rain', 'fire'],
+    tags: ['nature', 'cabin', 'rain', 'live'],
+  }),
+  env({
+    id: 'forest-overlook',
+    name: 'Forest Overlook',
+    category: 'nature',
+    image: I.forest,
+    viewpoint: 'balcony',
     sounds: ['birds', 'wind'],
-  }),
-  env({
-    id: 'beach-sunrise',
-    name: 'Beach Sunrise',
-    category: 'nature',
-    image:
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=70',
-    tags: ['nature', 'beach', 'sunrise'],
-    personalization: { timeOfDay: 'dawn', season: 'summer' },
-    sounds: ['ocean'],
-  }),
-  env({
-    id: 'zen-garden',
-    name: 'Zen Garden',
-    category: 'nature',
-    image:
-      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1920&q=70',
-    tags: ['nature', 'zen'],
-    personalization: { season: 'spring', viewpoint: 'reading' },
-    sounds: ['birds', 'wind'],
-  }),
-  env({
-    id: 'greenhouse-nook',
-    name: 'Greenhouse',
-    category: 'nature',
-    image:
-      'https://images.unsplash.com/photo-1466692476866-aef614ec2d7e?auto=format&fit=crop&w=1920&q=70',
-    tags: ['nature', 'greenhouse'],
-    personalization: { season: 'summer', weather: 'dust' },
-    sounds: ['birds'],
-  }),
-  env({
-    id: 'waterfall-overlook',
-    name: 'Waterfall Overlook',
-    category: 'nature',
-    image:
-      'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=1920&q=70',
-    tags: ['nature', 'waterfall'],
-    personalization: { viewpoint: 'balcony' },
-    sounds: ['ocean', 'birds'],
+    tags: ['nature', 'forest'],
   }),
   env({
     id: 'mountain-lodge',
     name: 'Mountain Lodge',
     category: 'nature',
-    image:
-      'https://images.unsplash.com/photo-1517824806704-9040b037703b?auto=format&fit=crop&w=1920&q=70',
-    tags: ['nature', 'lodge', 'winter'],
-    personalization: { season: 'winter', weather: 'snow', timeOfDay: 'night' },
+    image: I.mountainLodge,
+    season: 'winter',
     sounds: ['fire', 'wind'],
+    tags: ['nature', 'lodge'],
+  }),
+  env({
+    id: 'beach-sunrise',
+    name: 'Beach Sunrise',
+    category: 'nature',
+    image: I.coastal,
+    timeOfDay: 'dawn',
+    season: 'summer',
+    sounds: ['ocean', 'birds'],
+    tags: ['nature', 'beach'],
+  }),
+  env({
+    id: 'beach-sunset',
+    name: 'Beach Sunset',
+    category: 'nature',
+    image: I.beachSunset,
+    timeOfDay: 'golden',
+    season: 'summer',
+    sounds: ['ocean'],
+    tags: ['nature', 'beach'],
+  }),
+  env({
+    id: 'lake-dock',
+    name: 'Lake Dock',
+    category: 'nature',
+    image: I.lakeDock,
+    timeOfDay: 'dawn',
+    viewpoint: 'window',
+    sounds: ['birds', 'wind'],
+    tags: ['nature', 'lake'],
+  }),
+  env({
+    id: 'garden-patio',
+    name: 'Garden Patio',
+    category: 'nature',
+    image: I.garden,
+    season: 'spring',
+    viewpoint: 'balcony',
+    sounds: ['birds'],
+    tags: ['nature', 'garden'],
+  }),
+  env({
+    id: 'cherry-blossom-park',
+    name: 'Cherry Blossom Park',
+    category: 'nature',
+    image: I.cherry,
+    season: 'spring',
+    weather: 'dust',
+    sounds: ['birds', 'wind'],
+    tags: ['nature', 'spring'],
+  }),
+  env({
+    id: 'japanese-zen-garden',
+    name: 'Japanese Zen Garden',
+    category: 'nature',
+    image: I.zen,
+    season: 'spring',
+    viewpoint: 'reading',
+    intensity: 0.25,
+    sounds: ['birds', 'wind'],
+    tags: ['nature', 'zen'],
+  }),
+  env({
+    id: 'riverside-bench',
+    name: 'Riverside Bench',
+    category: 'nature',
+    image: I.river,
+    viewpoint: 'reading',
+    sounds: ['birds', 'wind'],
+    tags: ['nature', 'river'],
+  }),
+  env({
+    id: 'waterfall-overlook',
+    name: 'Waterfall Overlook',
+    category: 'nature',
+    image: I.river,
+    viewpoint: 'balcony',
+    sounds: ['ocean', 'birds'],
+    tags: ['nature', 'waterfall'],
+  }),
+  env({
+    id: 'greenhouse',
+    name: 'Greenhouse',
+    category: 'nature',
+    image: I.greenhouse,
+    season: 'summer',
+    weather: 'dust',
+    sounds: ['birds'],
+    tags: ['nature', 'greenhouse'],
   }),
 
-  // Cities
+  // —— City ——
   env({
-    id: 'modern-apartment',
-    name: 'Modern Apartment',
+    id: 'high-rise-apartment',
+    name: 'High-rise Apartment',
     category: 'city',
-    image:
-      'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1920&q=70',
-    tags: ['city', 'apartment'],
-    personalization: { viewpoint: 'desk', timeOfDay: 'afternoon' },
+    image: I.apartment,
+    video: V.highrise,
+    viewpoint: 'window',
     sounds: ['white', 'keyboard'],
+    tags: ['city', 'apartment', 'live'],
+  }),
+  env({
+    id: 'tokyo-apartment',
+    name: 'Tokyo Apartment',
+    category: 'city',
+    image: I.apartment,
+    season: 'spring',
+    viewpoint: 'desk',
+    sounds: ['rain', 'white'],
+    weather: 'rain',
+    tags: ['city', 'tokyo'],
+  }),
+  env({
+    id: 'new-york-loft',
+    name: 'New York Loft',
+    category: 'city',
+    image: I.loft,
+    sounds: ['white', 'keyboard'],
+    tags: ['city', 'loft'],
+  }),
+  env({
+    id: 'scandinavian-apartment',
+    name: 'Scandinavian Apartment',
+    category: 'city',
+    image: I.scandi,
+    intensity: 0.22,
+    sounds: ['white'],
+    tags: ['city', 'scandi'],
+  }),
+  env({
+    id: 'modern-office',
+    name: 'Modern Office',
+    category: 'office',
+    image: I.officeGlass,
+    video: V.cityOffice,
+    sounds: ['keyboard', 'white'],
+    tags: ['office', 'live'],
   }),
   env({
     id: 'rooftop-workspace',
     name: 'Rooftop Workspace',
     category: 'city',
-    image:
-      'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1920&q=70',
-    tags: ['city', 'rooftop'],
-    personalization: { viewpoint: 'rooftop', timeOfDay: 'golden' },
+    image: I.rooftop,
+    viewpoint: 'rooftop',
+    timeOfDay: 'golden',
     sounds: ['wind', 'cafe'],
+    tags: ['city', 'rooftop'],
   }),
   env({
     id: 'luxury-penthouse',
     name: 'Luxury Penthouse',
     category: 'city',
-    image:
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1920&q=70',
-    tags: ['city', 'penthouse'],
-    personalization: { timeOfDay: 'blue', viewpoint: 'window' },
+    image: I.penthouse,
+    timeOfDay: 'blue',
+    viewpoint: 'window',
     sounds: ['white'],
+    tags: ['city', 'penthouse'],
+  }),
+  env({
+    id: 'train-countryside',
+    name: 'Train Overlooking Countryside',
+    category: 'city',
+    image: I.train,
+    viewpoint: 'train',
+    season: 'autumn',
+    sounds: ['train', 'wind'],
+    tags: ['city', 'train'],
+  }),
+  env({
+    id: 'airport-lounge',
+    name: 'Airport Lounge',
+    category: 'city',
+    image: I.airport,
+    viewpoint: 'couch',
+    intensity: 0.2,
+    sounds: ['white', 'cafe'],
+    tags: ['city', 'airport'],
   }),
   env({
     id: 'quiet-coworking',
-    name: 'Quiet Coworking',
+    name: 'Quiet Coworking Space',
     category: 'city',
-    image:
-      'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1920&q=70',
-    tags: ['city', 'coworking'],
-    personalization: { viewpoint: 'desk' },
+    image: I.cowork,
+    video: V.openOffice,
     sounds: ['keyboard', 'cafe'],
+    tags: ['city', 'coworking', 'live'],
   }),
   env({
-    id: 'hotel-lounge',
-    name: 'Hotel Lounge',
+    id: 'museum-cafe',
+    name: 'Museum Café',
     category: 'city',
-    image:
-      'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=70',
-    tags: ['city', 'hotel'],
-    personalization: { timeOfDay: 'night', viewpoint: 'couch' },
-    sounds: ['cafe'],
+    image: I.museum,
+    viewpoint: 'booth',
+    sounds: ['cafe', 'pages'],
+    tags: ['city', 'museum'],
   }),
 
-  // Fantasy
-  env({
-    id: 'wizard-library',
-    name: 'Wizard Library',
-    category: 'fantasy',
-    image:
-      'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1920&q=70',
-    tags: ['fantasy', 'wizard', 'library'],
-    personalization: { timeOfDay: 'night', weather: 'dust', viewpoint: 'reading' },
-    sounds: ['fire', 'pages'],
-  }),
-  env({
-    id: 'space-observatory',
-    name: 'Space Observatory',
-    category: 'fantasy',
-    image:
-      'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=1920&q=70',
-    tags: ['fantasy', 'space'],
-    personalization: { timeOfDay: 'night', brightness: 0.8, viewpoint: 'window' },
-    sounds: ['white'],
-  }),
-  env({
-    id: 'ancient-temple',
-    name: 'Ancient Temple',
-    category: 'fantasy',
-    image:
-      'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1920&q=70',
-    tags: ['fantasy', 'temple'],
-    personalization: { timeOfDay: 'golden', weather: 'dust' },
-    sounds: ['wind', 'birds'],
-  }),
-  env({
-    id: 'steampunk-workshop',
-    name: 'Steampunk Workshop',
-    category: 'fantasy',
-    image:
-      'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=70',
-    tags: ['fantasy', 'steampunk'],
-    personalization: { timeOfDay: 'night', viewpoint: 'desk' },
-    sounds: ['clock', 'fire'],
-  }),
-
-  // Seasonal
+  // —— Seasonal ——
   env({
     id: 'autumn-porch',
     name: 'Autumn Porch',
     category: 'seasonal',
-    image:
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1920&q=70',
-    tags: ['seasonal', 'autumn'],
-    personalization: { season: 'autumn', viewpoint: 'balcony', weather: 'dust' },
+    image: I.autumnPorch,
+    season: 'autumn',
+    viewpoint: 'balcony',
+    weather: 'dust',
     sounds: ['wind', 'birds'],
+    tags: ['seasonal', 'autumn'],
   }),
   env({
-    id: 'snowy-cabin',
-    name: 'Snowy Cabin',
+    id: 'winter-cabin',
+    name: 'Winter Cabin',
     category: 'seasonal',
-    image:
-      'https://images.unsplash.com/photo-1517824806704-9040b037703b?auto=format&fit=crop&w=1920&q=70',
-    tags: ['seasonal', 'winter', 'snow'],
-    personalization: { season: 'winter', weather: 'snow', timeOfDay: 'night' },
+    image: I.snowCabin,
+    season: 'winter',
+    weather: 'snow',
+    timeOfDay: 'night',
     sounds: ['fire', 'wind'],
+    tags: ['seasonal', 'winter'],
   }),
   env({
     id: 'spring-garden',
     name: 'Spring Garden',
     category: 'seasonal',
-    image:
-      'https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1920&q=70',
-    tags: ['seasonal', 'spring'],
-    personalization: { season: 'spring', weather: 'none' },
+    image: I.garden,
+    season: 'spring',
     sounds: ['birds'],
+    tags: ['seasonal', 'spring'],
   }),
   env({
-    id: 'thunderstorm-window',
+    id: 'summer-beach',
+    name: 'Summer Beach',
+    category: 'seasonal',
+    image: I.coastal,
+    season: 'summer',
+    timeOfDay: 'afternoon',
+    sounds: ['ocean'],
+    tags: ['seasonal', 'summer'],
+  }),
+  env({
+    id: 'thunderstorm',
     name: 'Thunderstorm',
     category: 'seasonal',
-    image:
-      'https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?auto=format&fit=crop&w=1920&q=70',
-    video: 'https://assets.mixkit.co/videos/28085/28085-720.mp4',
-    animated: true,
-    tags: ['seasonal', 'storm', 'rain'],
-    personalization: { weather: 'storm', timeOfDay: 'afternoon' },
+    image: I.storm,
+    video: V.openRain,
+    weather: 'storm',
     sounds: ['rain', 'thunder'],
+    tags: ['seasonal', 'storm', 'live'],
+  }),
+  env({
+    id: 'snowstorm',
+    name: 'Snowstorm',
+    category: 'seasonal',
+    image: I.snowCabin,
+    weather: 'snow',
+    season: 'winter',
+    intensity: 0.65,
+    sounds: ['wind', 'fire'],
+    tags: ['seasonal', 'snow'],
   }),
   env({
     id: 'foggy-morning',
     name: 'Foggy Morning',
     category: 'seasonal',
-    image:
-      'https://images.unsplash.com/photo-1487621167305-5d248087c724?auto=format&fit=crop&w=1920&q=70',
-    tags: ['seasonal', 'fog'],
-    personalization: { weather: 'fog', timeOfDay: 'dawn' },
+    image: I.fog,
+    video: V.foggyGlass,
+    weather: 'fog',
+    timeOfDay: 'dawn',
     sounds: ['wind'],
+    tags: ['seasonal', 'fog', 'live'],
   }),
   env({
-    id: 'golden-hour-desk',
+    id: 'golden-hour',
     name: 'Golden Hour',
     category: 'seasonal',
-    image:
-      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1920&q=70',
-    tags: ['seasonal', 'golden'],
-    personalization: { timeOfDay: 'golden', weather: 'dust' },
+    image: I.deskSun,
+    timeOfDay: 'golden',
+    weather: 'dust',
     sounds: ['birds', 'keyboard'],
+    tags: ['seasonal', 'golden'],
   }),
   env({
-    id: 'blue-hour-city',
-    name: 'Blue Hour City',
+    id: 'blue-hour',
+    name: 'Blue Hour',
     category: 'seasonal',
-    image:
-      'https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=1920&q=70',
-    tags: ['seasonal', 'blue'],
-    personalization: { timeOfDay: 'blue', viewpoint: 'window' },
+    image: I.cityNight,
+    timeOfDay: 'blue',
+    viewpoint: 'window',
     sounds: ['white'],
+    tags: ['seasonal', 'blue'],
   }),
   env({
-    id: 'train-snowy-mountains',
-    name: 'Train Through Snow',
+    id: 'late-night-rain',
+    name: 'Late-night Rain',
     category: 'seasonal',
-    image:
-      'https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=1920&q=70',
-    tags: ['seasonal', 'train', 'snow'],
-    personalization: { season: 'winter', weather: 'snow', viewpoint: 'train' },
-    sounds: ['train', 'wind'],
+    image: I.deskNight,
+    video: V.rainyDesk,
+    weather: 'rain',
+    timeOfDay: 'night',
+    brightness: 0.85,
+    sounds: ['rain', 'keyboard'],
+    tags: ['seasonal', 'rain', 'night', 'live'],
   }),
 ]
 
-export const curatedEnvironments: FocusEnvironment[] = [...fromThemes, ...curatedExtras]
-
-export const envCategories: { id: EnvCategory | 'all' | 'animated' | 'mine'; label: string }[] = [
+export const envCategories: { id: EnvCategory | 'all' | 'animated'; label: string }[] = [
   { id: 'animated', label: 'Live' },
   { id: 'all', label: 'All' },
-  { id: 'mine', label: 'My AI' },
   { id: 'library', label: 'Libraries' },
   { id: 'cafe', label: 'Cafés' },
   { id: 'nature', label: 'Nature' },
   { id: 'city', label: 'Cities' },
-  { id: 'fantasy', label: 'Fantasy' },
   { id: 'seasonal', label: 'Seasonal' },
   { id: 'desk', label: 'Desk' },
   { id: 'office', label: 'Office' },

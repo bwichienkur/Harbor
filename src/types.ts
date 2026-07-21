@@ -102,6 +102,10 @@ export interface EnvironmentPersonalization {
   saturation: number
   viewpoint: Viewpoint
   overlay: number
+  /** Rain particle strength when weather is rain/storm (0–1). */
+  rainAmount: number
+  /** Snow particle strength when weather is snow (0–1). */
+  snowAmount: number
 }
 
 /** Modular focus environment — curated or AI-composed. */

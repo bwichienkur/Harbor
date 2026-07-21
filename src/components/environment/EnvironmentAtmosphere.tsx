@@ -33,12 +33,21 @@ export function EnvironmentAtmosphere({
 
   const intensity = reduceMotion || !pageVisible ? 0 : personalization.animationIntensity
   const paused = intensity < 0.05
+  const rainAmount = personalization.rainAmount ?? 0.45
+  const snowAmount = personalization.snowAmount ?? 0.4
+  const weatherOpacity =
+    personalization.weather === 'snow'
+      ? snowAmount
+      : personalization.weather === 'rain' || personalization.weather === 'storm'
+        ? rainAmount
+        : 0.45
 
   return (
     <div
       className={`env-atmosphere ${paused ? 'is-paused' : ''}`}
       style={{
         ['--env-intensity' as string]: String(intensity),
+        ['--env-weather-amount' as string]: String(weatherOpacity),
         ['--env-brightness' as string]: String(personalization.brightness),
         ['--env-saturate' as string]: String(personalization.saturation),
         ['--env-blur' as string]: `${personalization.blur}px`,
@@ -49,9 +58,7 @@ export function EnvironmentAtmosphere({
       {personalization.weather !== 'none' && (
         <div className={weatherClass(personalization.weather)} />
       )}
-      {intensity > 0.2 && personalization.weather === 'none' && (
-        <div className="env-dust" />
-      )}
+      {intensity > 0.2 && personalization.weather === 'none' && <div className="env-dust" />}
     </div>
   )
 }

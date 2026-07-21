@@ -2,8 +2,9 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { findEnvironment } from '../data/environments'
 import { themes } from '../data/themes'
-import { applyEnvironmentPersonalization, composeEnvironmentFromPrompt } from '../lib/environments/composeEnvironment'
+import { applyEnvironmentPersonalization } from '../lib/environments/composeEnvironment'
 import { etaToMinutes } from '../lib/format'
+import { atmospherePresets } from '../data/atmospherePresets'
 import type {
   AppSettings,
   DashMode,
@@ -126,11 +127,8 @@ export interface AppState {
   saveSoundPreset: (name: string) => void
   applySoundPreset: (id: string) => void
   removeSoundPreset: (id: string) => void
-  generateEnvironment: (prompt: string, slot?: DashMode) => FocusEnvironment
-  updateActiveEnvironment: (
-    patch: Partial<EnvironmentPersonalization>,
-    opts?: { regenerateImage?: boolean },
-  ) => void
+  updateActiveEnvironment: (patch: Partial<EnvironmentPersonalization>) => void
+  applyAtmospherePreset: (presetId: string) => void
   removeCustomEnvironment: (id: string) => void
   setNotepad: (text: string) => void
   setTimerLayout: (layout: TimerLayout) => void
@@ -404,24 +402,7 @@ export const useAppStore = create<AppState>()(
       },
       removeSoundPreset: (id) =>
         set((s) => ({ soundPresets: s.soundPresets.filter((p) => p.id !== id) })),
-      generateEnvironment: (prompt, slot) => {
-        const env = composeEnvironmentFromPrompt(prompt)
-        const mode = slot ?? get().mode
-        set((s) => ({
-          customEnvironments: [env, ...s.customEnvironments].slice(0, 40),
-          customBackground: null,
-          soundLayers: env.soundLayers.map((l) => ({ ...l })),
-          activeSoundId: env.soundLayers.find((l) => l.enabled)?.id ?? null,
-          homeThemeId: mode === 'home' ? env.id : s.homeThemeId,
-          focusThemeId: mode === 'focus' ? env.id : s.focusThemeId,
-          ambientThemeId: mode === 'ambient' ? env.id : s.ambientThemeId,
-        }))
-        const videoKey =
-          mode === 'focus' ? 'focusVideoUrl' : mode === 'ambient' ? 'ambientVideoUrl' : 'homeVideoUrl'
-        get().updateSettings({ [videoKey]: '' })
-        return env
-      },
-      updateActiveEnvironment: (patch, opts) => {
+      updateActiveEnvironment: (patch) => {
         const mode = get().mode
         const id =
           mode === 'focus'
@@ -431,30 +412,37 @@ export const useAppStore = create<AppState>()(
               : get().homeThemeId
         const current = findEnvironment(id, get().customEnvironments)
         if (!current) return
-        const updated = applyEnvironmentPersonalization(
-          current,
-          patch,
-          Boolean(opts?.regenerateImage),
-        )
-        if (current.curated) {
-          // Persist a personalized copy for curated bases
-          const copy = { ...updated, id: `env-${uid()}`, curated: false, createdAt: Date.now() }
-          set((s) => ({
-            customEnvironments: [copy, ...s.customEnvironments].slice(0, 40),
-            homeThemeId: mode === 'home' ? copy.id : s.homeThemeId,
-            focusThemeId: mode === 'focus' ? copy.id : s.focusThemeId,
-            ambientThemeId: mode === 'ambient' ? copy.id : s.ambientThemeId,
-          }))
-          return
+        const updated = applyEnvironmentPersonalization(current, patch)
+        // Keep the same id so removing the override restores the curated original.
+        const saved: FocusEnvironment = {
+          ...updated,
+          id: current.id,
+          curated: false,
+          createdAt: current.createdAt || Date.now(),
         }
         set((s) => ({
-          customEnvironments: s.customEnvironments.map((e) => (e.id === id ? updated : e)),
+          customEnvironments: [
+            saved,
+            ...s.customEnvironments.filter((e) => e.id !== current.id),
+          ].slice(0, 40),
         }))
       },
-      removeCustomEnvironment: (id) =>
+      applyAtmospherePreset: (presetId) => {
+        const preset = atmospherePresets.find((p) => p.id === presetId)
+        if (!preset) return
+        get().updateActiveEnvironment(preset.personalization)
+        get().setSoundLayers(preset.sounds.map((l) => ({ ...l })))
+      },
+      removeCustomEnvironment: (id) => {
         set((s) => ({
           customEnvironments: s.customEnvironments.filter((e) => e.id !== id),
-        })),
+        }))
+        // Re-apply curated defaults (including sounds) for the same id.
+        const curated = findEnvironment(id, [])
+        if (curated?.soundLayers?.length) {
+          get().setSoundLayers(curated.soundLayers.map((l) => ({ ...l })))
+        }
+      },
       setNotepad: (text) => set({ notepad: text }),
       setTimerLayout: (layout) => set({ timerLayout: layout }),
       resetTimerLayout: () => set({ timerLayout: null }),

@@ -5,15 +5,17 @@ import type {
 } from '../../types'
 
 export const defaultPersonalization = (): EnvironmentPersonalization => ({
-  animationIntensity: 0.45,
+  animationIntensity: 0.4,
   weather: 'none',
   timeOfDay: 'afternoon',
   season: 'autumn',
   brightness: 1,
   blur: 0,
-  saturation: 0.92,
+  saturation: 0.9,
   viewpoint: 'desk',
   overlay: 0.42,
+  rainAmount: 0.45,
+  snowAmount: 0.4,
 })
 
 export function soundLayer(
@@ -23,6 +25,3 @@ export function soundLayer(
 ): SoundLayerState {
   return { id, enabled, volume }
 }
-
-export const ART_DIRECTION =
-  'cinematic cozy premium believable elegant immersive warm calming minimalist relaxing focus workspace, fixed seated camera, subtle atmosphere, soft natural color grading, not cartoonish, no flashy effects, photorealistic'

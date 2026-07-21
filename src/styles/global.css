@@ -1622,7 +1622,7 @@ button {
 .env-weather {
   position: absolute;
   inset: 0;
-  opacity: calc(0.35 + var(--env-intensity, 0.45) * 0.55);
+  opacity: calc(0.2 + var(--env-weather-amount, 0.45) * 0.7 * (0.35 + var(--env-intensity, 0.45)));
 }
 
 .env-weather-rain,
@@ -1720,27 +1720,6 @@ button {
   96% {
     opacity: 0.1;
   }
-}
-
-.theme-card-ai .theme-ai {
-  position: absolute;
-  top: 0.45rem;
-  left: 0.45rem;
-  z-index: 1;
-  padding: 0.15rem 0.4rem;
-  border-radius: 999px;
-  background: rgba(12, 22, 22, 0.7);
-  color: var(--warm);
-  font-size: 0.65rem;
-  font-style: normal;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.theme-card-live.theme-card-ai .theme-ai {
-  left: auto;
-  right: 0.45rem;
-  top: 2.1rem;
 }
 
 .theme-delete {
