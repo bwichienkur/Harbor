@@ -12,6 +12,7 @@ import type {
   DashMode,
   FocusSession,
   HarborBackup,
+  SessionIconShape,
   SoundLayerState,
   StudyRoomState,
   Task,
@@ -116,12 +117,15 @@ export interface AppState {
   clearMode: boolean
   miniTimer: boolean
   room: StudyRoomState
+  /** Ephemeral hover preview for session tally icons (not persisted). */
+  sessionIconPreview: SessionIconShape | null
 
   setMode: (mode: DashMode) => void
   setPanel: (panel: AppState['panel']) => void
   setClearMode: (on: boolean) => void
   toggleClearMode: () => void
   setMiniTimer: (on: boolean) => void
+  setSessionIconPreview: (shape: SessionIconShape | null) => void
   updateSettings: (patch: Partial<AppSettings>) => void
   updateTimerSettings: (patch: Partial<TimerSettings>) => void
   setTheme: (slot: 'home' | 'focus' | 'ambient', themeId: string) => void
@@ -285,6 +289,7 @@ export const useAppStore = create<AppState>()(
       customLayoutTemplates: [],
       clearMode: false,
       miniTimer: false,
+      sessionIconPreview: null,
       room: {
         code: null,
         role: null,
@@ -301,6 +306,7 @@ export const useAppStore = create<AppState>()(
         set({ clearMode: next, panel: next ? 'none' : get().panel })
       },
       setMiniTimer: (on) => set({ miniTimer: on }),
+      setSessionIconPreview: (shape) => set({ sessionIconPreview: shape }),
       updateSettings: (patch) =>
         set((s) => ({ settings: { ...s.settings, ...patch } })),
       setRoom: (patch) => set((s) => ({ room: { ...s.room, ...patch } })),

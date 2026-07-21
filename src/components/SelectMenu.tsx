@@ -8,6 +8,7 @@ import {
   useState,
   type CSSProperties,
   type KeyboardEvent,
+  type ReactNode,
 } from 'react'
 import { createPortal } from 'react-dom'
 import { fontStackFor, preloadGoogleFonts } from '../data/fonts'
@@ -17,6 +18,8 @@ export type SelectOption<T extends string = string> = {
   label: string
   /** When set, option label (and trigger when selected) render in this family. */
   fontFamily?: string
+  /** Optional leading glyph (e.g. session tally icon). */
+  leading?: ReactNode
   disabled?: boolean
 }
 
@@ -62,6 +65,7 @@ export function SelectMenu<T extends string>({
   const selected = options.find((o) => o.value === value)
   const selectedLabel = selected?.label ?? placeholder
   const selectedFont = selected?.fontFamily
+  const selectedLeading = selected?.leading
 
   const updateCoords = () => {
     const el = triggerRef.current
@@ -255,6 +259,9 @@ export function SelectMenu<T extends string>({
                 }}
                 onClick={() => commit(opt)}
               >
+                {opt.leading ? (
+                  <span className="select-menu-option-leading">{opt.leading}</span>
+                ) : null}
                 <span className="select-menu-option-label">{opt.label}</span>
                 {isSelected && <Check size={16} strokeWidth={2.4} aria-hidden />}
               </button>
@@ -281,6 +288,9 @@ export function SelectMenu<T extends string>({
         onClick={() => setOpen((v) => !v)}
         onKeyDown={onTriggerKeyDown}
       >
+        {selectedLeading ? (
+          <span className="select-menu-trigger-leading">{selectedLeading}</span>
+        ) : null}
         <span className="select-menu-value">{selectedLabel}</span>
         <ChevronDown
           className={`select-menu-chevron${open ? ' open' : ''}`}

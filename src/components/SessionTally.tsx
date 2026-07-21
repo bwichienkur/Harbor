@@ -1,4 +1,5 @@
 import { Check, Circle, Flame, Heart, Star } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { SessionIconShape } from '../types'
 import { useAppStore } from '../store/useAppStore'
 
@@ -15,10 +16,21 @@ const icons: Record<
 
 export const sessionIconOptions = (
   Object.entries(icons) as [SessionIconShape, (typeof icons)[SessionIconShape]][]
-).map(([id, meta]) => ({ id, label: meta.label }))
+).map(([id, meta]) => ({
+  id,
+  label: meta.label,
+  Icon: meta.Icon,
+}))
+
+export function sessionIconLeading(shape: SessionIconShape, size = 16): ReactNode {
+  const { Icon } = icons[shape] ?? icons.heart
+  return <Icon size={size} strokeWidth={2.2} aria-hidden />
+}
 
 export function SessionTally({ scale = 1 }: { scale?: number }) {
-  const shape = useAppStore((s) => s.settings.sessionIconShape)
+  const savedShape = useAppStore((s) => s.settings.sessionIconShape)
+  const previewShape = useAppStore((s) => s.sessionIconPreview)
+  const shape = previewShape ?? savedShape
   const completedFocusCount = useAppStore((s) => s.completedFocusCount)
   const longBreakEvery = useAppStore((s) => s.timerSettings.longBreakEvery)
   const phase = useAppStore((s) => s.phase)

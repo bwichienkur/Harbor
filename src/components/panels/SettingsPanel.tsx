@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { applySiteFontFamily, resolveSiteFontFamily, siteFontPresets } from '../../data/fonts'
 import { allLayoutTemplates } from '../../data/layoutTemplates'
 import { playChime } from '../../lib/audio'
 import { requestNotificationPermission } from '../../lib/notifications'
 import { downloadText } from '../../lib/stats'
 import { useAppStore } from '../../store/useAppStore'
-import type { AlertSoundId, HarborBackup, SessionIconShape, TimerMode } from '../../types'
+import type { AlertSoundId, HarborBackup, TimerMode } from '../../types'
 import { SelectMenu } from '../SelectMenu'
+import { sessionIconLeading, sessionIconOptions } from '../SessionTally'
 
 const modes: { id: TimerMode; label: string }[] = [
   { id: 'pomodoro', label: 'Pomodoro' },
@@ -30,6 +31,7 @@ export function SettingsPanel() {
   const settings = useAppStore((s) => s.settings)
   const timerSettings = useAppStore((s) => s.timerSettings)
   const updateSettings = useAppStore((s) => s.updateSettings)
+  const setSessionIconPreview = useAppStore((s) => s.setSessionIconPreview)
   const updateTimerSettings = useAppStore((s) => s.updateTimerSettings)
   const resetTimer = useAppStore((s) => s.resetTimer)
   const exportBackup = useAppStore((s) => s.exportBackup)
@@ -44,6 +46,10 @@ export function SettingsPanel() {
   const taskDockLayout = useAppStore((s) => s.taskDockLayout)
   const [tab, setTab] = useState<Tab>('general')
   const [layoutName, setLayoutName] = useState('')
+
+  useEffect(() => {
+    return () => setSessionIconPreview(null)
+  }, [setSessionIconPreview])
 
   const layouts = allLayoutTemplates(customLayoutTemplates)
   const canSaveLayout = Boolean(timerLayout && clockLayout && taskDockLayout)
@@ -161,16 +167,16 @@ export function SettingsPanel() {
             <SelectMenu
               id="session-icon"
               value={settings.sessionIconShape}
-              onChange={(sessionIconShape) => updateSettings({ sessionIconShape })}
-              options={
-                [
-                  { value: 'heart', label: 'Hearts' },
-                  { value: 'star', label: 'Stars' },
-                  { value: 'circle', label: 'Circles' },
-                  { value: 'flame', label: 'Flames' },
-                  { value: 'check', label: 'Checks' },
-                ] satisfies { value: SessionIconShape; label: string }[]
-              }
+              onChange={(sessionIconShape) => {
+                setSessionIconPreview(null)
+                updateSettings({ sessionIconShape })
+              }}
+              onHoverOption={setSessionIconPreview}
+              options={sessionIconOptions.map((opt) => ({
+                value: opt.id,
+                label: opt.label,
+                leading: sessionIconLeading(opt.id),
+              }))}
             />
           </div>
           <Toggle

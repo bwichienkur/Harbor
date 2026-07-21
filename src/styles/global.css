@@ -713,6 +713,26 @@ button {
   letter-spacing: -0.01em;
 }
 
+.select-menu-trigger-leading,
+.select-menu-option-leading {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.select-menu-option-leading {
+  opacity: 0.9;
+}
+
+.select-menu-option.active .select-menu-option-leading,
+.select-menu-option:hover .select-menu-option-leading,
+.select-menu-option.selected .select-menu-option-leading {
+  opacity: 1;
+  color: var(--accent);
+}
+
 .select-menu-chevron {
   flex-shrink: 0;
   color: var(--ink-mute);
