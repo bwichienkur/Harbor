@@ -1,11 +1,12 @@
-import { useState } from 'react'
-import { siteFontPresets } from '../../data/fonts'
+import { useMemo, useState } from 'react'
+import { fontStackFor, siteFontPresets } from '../../data/fonts'
 import { allLayoutTemplates } from '../../data/layoutTemplates'
 import { playChime } from '../../lib/audio'
 import { requestNotificationPermission } from '../../lib/notifications'
 import { downloadText } from '../../lib/stats'
 import { useAppStore } from '../../store/useAppStore'
-import type { AlertSoundId, HarborBackup, TimerMode } from '../../types'
+import type { AlertSoundId, HarborBackup, SessionIconShape, TimerMode } from '../../types'
+import { SelectMenu } from '../SelectMenu'
 
 const modes: { id: TimerMode; label: string }[] = [
   { id: 'pomodoro', label: 'Pomodoro' },
@@ -43,9 +44,28 @@ export function SettingsPanel() {
   const taskDockLayout = useAppStore((s) => s.taskDockLayout)
   const [tab, setTab] = useState<Tab>('general')
   const [layoutName, setLayoutName] = useState('')
+  const [fontHover, setFontHover] = useState<string | null>(null)
 
   const layouts = allLayoutTemplates(customLayoutTemplates)
   const canSaveLayout = Boolean(timerLayout && clockLayout && taskDockLayout)
+
+  const fontOptions = useMemo(
+    () =>
+      siteFontPresets.map((font) => ({
+        value: font.id,
+        label: font.label,
+        fontFamily: font.id === 'custom' ? undefined : font.id,
+      })),
+    [],
+  )
+
+  const previewSource =
+    fontHover && fontHover !== 'custom'
+      ? fontHover
+      : settings.siteFont === 'custom'
+        ? settings.customFont.trim() || 'Manrope'
+        : settings.siteFont
+  const previewFontFamily = fontStackFor(previewSource)
 
   return (
     <div className="panel-section">
@@ -109,17 +129,14 @@ export function SettingsPanel() {
           />
           <div className="field">
             <label htmlFor="site-font">Site font</label>
-            <select
+            <SelectMenu
               id="site-font"
               value={settings.siteFont}
-              onChange={(e) => updateSettings({ siteFont: e.target.value })}
-            >
-              {siteFontPresets.map((font) => (
-                <option key={font.id} value={font.id}>
-                  {font.label}
-                </option>
-              ))}
-            </select>
+              options={fontOptions}
+              preloadFonts
+              onChange={(siteFont) => updateSettings({ siteFont })}
+              onHoverOption={setFontHover}
+            />
           </div>
           {settings.siteFont === 'custom' && (
             <div className="field">
@@ -134,38 +151,29 @@ export function SettingsPanel() {
                 Type any Google Fonts family name (or a system font). Harbor loads it for the whole
                 app.
               </p>
-              {settings.customFont.trim() && (
-                <p className="font-preview" style={{ fontFamily: `"${settings.customFont.trim()}"` }}>
-                  The quick brown fox jumps over the lazy dog · 25:00
-                </p>
-              )}
             </div>
           )}
-          {settings.siteFont !== 'custom' && (
-            <p
-              className="font-preview"
-              style={{ fontFamily: `"${settings.siteFont}", system-ui, sans-serif` }}
-            >
+          {(settings.siteFont !== 'custom' || settings.customFont.trim()) && (
+            <p className="font-preview" style={{ fontFamily: previewFontFamily }}>
               Preview · Harbor Focus · 25:00
             </p>
           )}
           <div className="field">
             <label htmlFor="session-icon">Session tally icon</label>
-            <select
+            <SelectMenu
               id="session-icon"
               value={settings.sessionIconShape}
-              onChange={(e) =>
-                updateSettings({
-                  sessionIconShape: e.target.value as typeof settings.sessionIconShape,
-                })
+              onChange={(sessionIconShape) => updateSettings({ sessionIconShape })}
+              options={
+                [
+                  { value: 'heart', label: 'Hearts' },
+                  { value: 'star', label: 'Stars' },
+                  { value: 'circle', label: 'Circles' },
+                  { value: 'flame', label: 'Flames' },
+                  { value: 'check', label: 'Checks' },
+                ] satisfies { value: SessionIconShape; label: string }[]
               }
-            >
-              <option value="heart">Hearts</option>
-              <option value="star">Stars</option>
-              <option value="circle">Circles</option>
-              <option value="flame">Flames</option>
-              <option value="check">Checks</option>
-            </select>
+            />
           </div>
           <Toggle
             label="Soft clear chrome while focusing"
@@ -299,20 +307,15 @@ export function SettingsPanel() {
         <>
           <div className="field">
             <label htmlFor="timer-mode">Timer mode</label>
-            <select
+            <SelectMenu
               id="timer-mode"
               value={timerSettings.mode}
-              onChange={(e) => {
-                updateTimerSettings({ mode: e.target.value as TimerMode })
+              options={modes.map((m) => ({ value: m.id, label: m.label }))}
+              onChange={(mode) => {
+                updateTimerSettings({ mode })
                 resetTimer()
               }}
-            >
-              {modes.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
+            />
           </div>
           <SliderField
             label="Focus minutes"
@@ -382,21 +385,15 @@ export function SettingsPanel() {
           />
           <div className="field">
             <label htmlFor="alert-sound">Alert sound</label>
-            <select
+            <SelectMenu
               id="alert-sound"
               value={settings.alertSoundId}
-              onChange={(e) => {
-                const id = e.target.value as AlertSoundId
-                updateSettings({ alertSoundId: id })
-                playChime(id)
+              options={alerts.map((a) => ({ value: a.id, label: a.label }))}
+              onChange={(alertSoundId) => {
+                updateSettings({ alertSoundId })
+                playChime(alertSoundId)
               }}
-            >
-              {alerts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.label}
-                </option>
-              ))}
-            </select>
+            />
           </div>
           <Toggle
             label="Desktop notifications"

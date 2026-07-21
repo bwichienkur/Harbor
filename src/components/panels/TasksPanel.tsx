@@ -4,6 +4,7 @@ import { clampEtaMinutes, etaToMinutes, formatDuration, formatEtaMinutes } from 
 import { plannedMinutes } from '../../lib/stats'
 import type { TaskColor, TaskRecurrence } from '../../types'
 import { useAppStore } from '../../store/useAppStore'
+import { SelectMenu } from '../SelectMenu'
 
 const colors: TaskColor[] = ['sage', 'sand', 'coral', 'sky', 'lilac', 'slate']
 const recurrences: { id: TaskRecurrence; label: string }[] = [
@@ -141,17 +142,12 @@ export function TasksPanel() {
             </div>
             <div className="field">
               <label htmlFor="recurrence">Repeat</label>
-              <select
+              <SelectMenu
                 id="recurrence"
                 value={recurrence}
-                onChange={(e) => setRecurrence(e.target.value as TaskRecurrence)}
-              >
-                {recurrences.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => setRecurrence(value)}
+                options={recurrences.map((r) => ({ value: r.id, label: r.label }))}
+              />
             </div>
           </div>
         )}

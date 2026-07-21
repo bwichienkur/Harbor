@@ -53,6 +53,32 @@ export function googleFontStylesheetUrl(family: string) {
   return `https://fonts.googleapis.com/css2?family=${param}:wght@400;500;600;700;800&display=swap`
 }
 
+/** Preload several Google Font families (e.g. for font-picker hover previews). */
+export function preloadGoogleFonts(families: string[]) {
+  const unique = [
+    ...new Set(
+      families
+        .map((f) => f.trim().replace(/\s+/g, ' '))
+        .filter((f) => f && f !== 'custom' && !isSystemFont(f)),
+    ),
+  ]
+  if (!unique.length) return
+
+  const href = `https://fonts.googleapis.com/css2?${unique
+    .map((f) => `family=${f.replace(/ /g, '+')}:wght@400;500;600;700;800`)
+    .join('&')}&display=swap`
+
+  const id = 'harbor-font-preview-preload'
+  let link = document.getElementById(id) as HTMLLinkElement | null
+  if (!link) {
+    link = document.createElement('link')
+    link.id = id
+    link.rel = 'stylesheet'
+    document.head.appendChild(link)
+  }
+  if (link.href !== href) link.href = href
+}
+
 export function resolveSiteFontFamily(siteFont: string, customFont: string) {
   if (siteFont === 'custom') {
     const custom = customFont.trim()
