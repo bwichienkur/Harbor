@@ -1,12 +1,17 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { findEnvironment } from '../data/environments'
 import { themes } from '../data/themes'
+import { applyEnvironmentPersonalization, composeEnvironmentFromPrompt } from '../lib/environments/composeEnvironment'
 import { etaToMinutes } from '../lib/format'
 import type {
   AppSettings,
   DashMode,
+  EnvironmentPersonalization,
+  FocusEnvironment,
   FocusSession,
   HarborBackup,
+  SoundLayerState,
   StudyRoomState,
   Task,
   TaskColor,
@@ -82,6 +87,9 @@ export interface AppState {
   customBackground: string | null
   activeSoundId: string | null
   soundVolume: number
+  soundLayers: SoundLayerState[]
+  soundPresets: { id: string; name: string; layers: SoundLayerState[] }[]
+  customEnvironments: FocusEnvironment[]
   sessions: FocusSession[]
   panel:
     | 'none'
@@ -112,6 +120,18 @@ export interface AppState {
   setCustomBackground: (dataUrl: string | null) => void
   setSound: (id: string | null) => void
   setSoundVolume: (v: number) => void
+  setSoundLayers: (layers: SoundLayerState[]) => void
+  toggleSoundLayer: (id: SoundLayerState['id']) => void
+  setSoundLayerVolume: (id: SoundLayerState['id'], volume: number) => void
+  saveSoundPreset: (name: string) => void
+  applySoundPreset: (id: string) => void
+  removeSoundPreset: (id: string) => void
+  generateEnvironment: (prompt: string, slot?: DashMode) => FocusEnvironment
+  updateActiveEnvironment: (
+    patch: Partial<EnvironmentPersonalization>,
+    opts?: { regenerateImage?: boolean },
+  ) => void
+  removeCustomEnvironment: (id: string) => void
   setNotepad: (text: string) => void
   setTimerLayout: (layout: TimerLayout) => void
   resetTimerLayout: () => void
@@ -189,6 +209,7 @@ const defaultSettings: AppSettings = {
   siteFont: 'Manrope',
   customFont: '',
   keepAwakeWhileRunning: true,
+  reduceEnvironmentMotion: false,
 }
 
 function nextPhase(
@@ -244,6 +265,9 @@ export const useAppStore = create<AppState>()(
       customBackground: null,
       activeSoundId: null,
       soundVolume: 0.35,
+      soundLayers: [],
+      soundPresets: [],
+      customEnvironments: [],
       sessions: [],
       panel: 'none',
       focusStartedAt: null,
@@ -303,13 +327,134 @@ export const useAppStore = create<AppState>()(
         })
       },
       setTheme: (slot, themeId) => {
-        if (slot === 'home') set({ homeThemeId: themeId })
-        if (slot === 'focus') set({ focusThemeId: themeId })
-        if (slot === 'ambient') set({ ambientThemeId: themeId })
+        const env = findEnvironment(themeId, get().customEnvironments)
+        const patch: Partial<AppState> = {}
+        if (slot === 'home') patch.homeThemeId = themeId
+        if (slot === 'focus') patch.focusThemeId = themeId
+        if (slot === 'ambient') patch.ambientThemeId = themeId
+        if (env?.soundLayers?.length) {
+          patch.soundLayers = env.soundLayers.map((l) => ({ ...l }))
+          const first = env.soundLayers.find((l) => l.enabled)
+          patch.activeSoundId = first?.id ?? null
+          patch.soundVolume = first?.volume ?? get().soundVolume
+        }
+        set(patch)
       },
       setCustomBackground: (dataUrl) => set({ customBackground: dataUrl }),
-      setSound: (id) => set({ activeSoundId: id }),
-      setSoundVolume: (v) => set({ soundVolume: v }),
+      setSound: (id) => {
+        if (!id) {
+          set({ activeSoundId: null, soundLayers: [] })
+          return
+        }
+        set({
+          activeSoundId: id,
+          soundLayers: [{ id: id as SoundLayerState['id'], enabled: true, volume: get().soundVolume }],
+        })
+      },
+      setSoundVolume: (v) =>
+        set((s) => ({
+          soundVolume: v,
+          soundLayers: s.soundLayers.map((l) => (l.enabled ? { ...l, volume: v } : l)),
+        })),
+      setSoundLayers: (layers) => {
+        const first = layers.find((l) => l.enabled)
+        set({
+          soundLayers: layers,
+          activeSoundId: first?.id ?? null,
+          soundVolume: first?.volume ?? get().soundVolume,
+        })
+      },
+      toggleSoundLayer: (id) => {
+        const existing = get().soundLayers.find((l) => l.id === id)
+        let next: SoundLayerState[]
+        if (!existing) {
+          next = [...get().soundLayers, { id, enabled: true, volume: get().soundVolume || 0.35 }]
+        } else {
+          next = get().soundLayers.map((l) =>
+            l.id === id ? { ...l, enabled: !l.enabled } : l,
+          )
+        }
+        const first = next.find((l) => l.enabled)
+        set({
+          soundLayers: next,
+          activeSoundId: first?.id ?? null,
+        })
+      },
+      setSoundLayerVolume: (id, volume) => {
+        const next = get().soundLayers.map((l) => (l.id === id ? { ...l, volume } : l))
+        set({
+          soundLayers: next,
+          soundVolume: next.find((l) => l.enabled)?.volume ?? get().soundVolume,
+        })
+      },
+      saveSoundPreset: (name) => {
+        const trimmed = name.trim()
+        if (!trimmed) return
+        const preset = {
+          id: uid(),
+          name: trimmed,
+          layers: get().soundLayers.map((l) => ({ ...l })),
+        }
+        set((s) => ({ soundPresets: [...s.soundPresets, preset] }))
+      },
+      applySoundPreset: (id) => {
+        const preset = get().soundPresets.find((p) => p.id === id)
+        if (!preset) return
+        get().setSoundLayers(preset.layers.map((l) => ({ ...l })))
+      },
+      removeSoundPreset: (id) =>
+        set((s) => ({ soundPresets: s.soundPresets.filter((p) => p.id !== id) })),
+      generateEnvironment: (prompt, slot) => {
+        const env = composeEnvironmentFromPrompt(prompt)
+        const mode = slot ?? get().mode
+        set((s) => ({
+          customEnvironments: [env, ...s.customEnvironments].slice(0, 40),
+          customBackground: null,
+          soundLayers: env.soundLayers.map((l) => ({ ...l })),
+          activeSoundId: env.soundLayers.find((l) => l.enabled)?.id ?? null,
+          homeThemeId: mode === 'home' ? env.id : s.homeThemeId,
+          focusThemeId: mode === 'focus' ? env.id : s.focusThemeId,
+          ambientThemeId: mode === 'ambient' ? env.id : s.ambientThemeId,
+        }))
+        const videoKey =
+          mode === 'focus' ? 'focusVideoUrl' : mode === 'ambient' ? 'ambientVideoUrl' : 'homeVideoUrl'
+        get().updateSettings({ [videoKey]: '' })
+        return env
+      },
+      updateActiveEnvironment: (patch, opts) => {
+        const mode = get().mode
+        const id =
+          mode === 'focus'
+            ? get().focusThemeId
+            : mode === 'ambient'
+              ? get().ambientThemeId
+              : get().homeThemeId
+        const current = findEnvironment(id, get().customEnvironments)
+        if (!current) return
+        const updated = applyEnvironmentPersonalization(
+          current,
+          patch,
+          Boolean(opts?.regenerateImage),
+        )
+        if (current.curated) {
+          // Persist a personalized copy for curated bases
+          const copy = { ...updated, id: `env-${uid()}`, curated: false, createdAt: Date.now() }
+          set((s) => ({
+            customEnvironments: [copy, ...s.customEnvironments].slice(0, 40),
+            homeThemeId: mode === 'home' ? copy.id : s.homeThemeId,
+            focusThemeId: mode === 'focus' ? copy.id : s.focusThemeId,
+            ambientThemeId: mode === 'ambient' ? copy.id : s.ambientThemeId,
+          }))
+          return
+        }
+        set((s) => ({
+          customEnvironments: s.customEnvironments.map((e) => (e.id === id ? updated : e)),
+        }))
+      },
+      removeCustomEnvironment: (id) =>
+        set((s) => ({
+          customEnvironments: s.customEnvironments.filter((e) => e.id !== id),
+        })),
       setNotepad: (text) => set({ notepad: text }),
       setTimerLayout: (layout) => set({ timerLayout: layout }),
       resetTimerLayout: () => set({ timerLayout: null }),
@@ -569,6 +714,9 @@ export const useAppStore = create<AppState>()(
           completedFocusCount: s.completedFocusCount,
           timerLayout: s.timerLayout,
           taskDockLayout: s.taskDockLayout,
+          customEnvironments: s.customEnvironments,
+          soundLayers: s.soundLayers,
+          soundPresets: s.soundPresets,
         }
       },
 
@@ -588,6 +736,9 @@ export const useAppStore = create<AppState>()(
           completedFocusCount: backup.completedFocusCount ?? 0,
           timerLayout: backup.timerLayout ?? null,
           taskDockLayout: backup.taskDockLayout ?? null,
+          customEnvironments: backup.customEnvironments ?? [],
+          soundLayers: backup.soundLayers ?? [],
+          soundPresets: backup.soundPresets ?? [],
         })
       },
     }),
@@ -595,26 +746,21 @@ export const useAppStore = create<AppState>()(
       name: 'harbor-focus-dashboard',
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<AppState>
-        const themeIds = new Set(themes.map((t) => t.id))
-        const homeThemeId =
-          p.homeThemeId && themeIds.has(p.homeThemeId) ? p.homeThemeId : current.homeThemeId
-        const focusThemeId =
-          p.focusThemeId && themeIds.has(p.focusThemeId)
-            ? p.focusThemeId
-            : current.focusThemeId
-        const ambientThemeId =
-          p.ambientThemeId && themeIds.has(p.ambientThemeId)
-            ? p.ambientThemeId
-            : current.ambientThemeId
+        const custom = p.customEnvironments ?? current.customEnvironments
+        const resolveId = (id: string | undefined, fallback: string) =>
+          id && findEnvironment(id, custom) ? id : fallback
         return {
           ...current,
           ...p,
-          homeThemeId,
-          focusThemeId,
-          ambientThemeId,
+          homeThemeId: resolveId(p.homeThemeId, current.homeThemeId),
+          focusThemeId: resolveId(p.focusThemeId, current.focusThemeId),
+          ambientThemeId: resolveId(p.ambientThemeId, current.ambientThemeId),
           settings: { ...current.settings, ...p.settings },
           timerSettings: { ...current.timerSettings, ...p.timerSettings },
           tasks: (p.tasks ?? current.tasks).map((t) => normalizeTask(t)),
+          customEnvironments: custom,
+          soundLayers: p.soundLayers ?? current.soundLayers,
+          soundPresets: p.soundPresets ?? current.soundPresets,
         }
       },
       partialize: (s) => ({
@@ -628,6 +774,9 @@ export const useAppStore = create<AppState>()(
         customBackground: s.customBackground,
         activeSoundId: s.activeSoundId,
         soundVolume: s.soundVolume,
+        soundLayers: s.soundLayers,
+        soundPresets: s.soundPresets,
+        customEnvironments: s.customEnvironments,
         sessions: s.sessions,
         completedFocusCount: s.completedFocusCount,
         timerLayout: s.timerLayout,

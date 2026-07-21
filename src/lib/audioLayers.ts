@@ -1,6 +1,6 @@
-import type { AlertSoundId, AmbientSound } from '../types'
+import type { AmbientSoundKind, SoundLayerState } from '../types'
 
-type ActiveNodes = {
+type LayerNodes = {
   gain: GainNode
   sources: AudioNode[]
   timers: number[]
@@ -8,13 +8,13 @@ type ActiveNodes = {
 
 let ctx: AudioContext | null = null
 let master: GainNode | null = null
-let active: ActiveNodes | null = null
+const layers = new Map<AmbientSoundKind, LayerNodes>()
 
 function ensureContext() {
   if (!ctx) {
     ctx = new AudioContext()
     master = ctx.createGain()
-    master.gain.value = 0.35
+    master.gain.value = 1
     master.connect(ctx.destination)
   }
   return { ctx, master: master! }
@@ -75,22 +75,11 @@ function startLfoTone(
   return { osc, lfo, gain }
 }
 
-export async function playAmbient(sound: AmbientSound | null, volume = 0.35) {
-  stopAmbient()
-  if (!sound) return
-
-  const { ctx: context, master: out } = ensureContext()
-  if (context.state === 'suspended') await context.resume()
-
-  out.gain.value = volume
-  const bus = context.createGain()
-  bus.gain.value = 1
-  bus.connect(out)
-
+function buildKind(context: AudioContext, bus: GainNode, kind: AmbientSoundKind) {
   const sources: AudioNode[] = []
   const timers: number[] = []
 
-  switch (sound.kind) {
+  switch (kind) {
     case 'rain': {
       const n = startNoise(context, bus, 'lowpass', 1200, 0.55)
       sources.push(n.source, n.filter, n.gain)
@@ -150,10 +139,7 @@ export async function playAmbient(sound: AmbientSound | null, volume = 0.35) {
         o.connect(g)
         g.connect(bus)
         o.start()
-        o.frequency.linearRampToValueAtTime(
-          o.frequency.value + 400,
-          context.currentTime + 0.12,
-        )
+        o.frequency.linearRampToValueAtTime(o.frequency.value + 400, context.currentTime + 0.12)
         g.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.15)
         o.stop(context.currentTime + 0.16)
       }
@@ -178,33 +164,87 @@ export async function playAmbient(sound: AmbientSound | null, volume = 0.35) {
       timers.push(window.setInterval(cricket, 180))
       break
     }
-    default: {
-      const n = startNoise(context, bus, 'lowpass', 900, 0.28)
+    case 'thunder': {
+      const rumble = () => {
+        const n = startNoise(context, bus, 'lowpass', 180, 0.001)
+        sources.push(n.source, n.filter, n.gain)
+        n.gain.gain.setValueAtTime(0.001, context.currentTime)
+        n.gain.gain.linearRampToValueAtTime(0.45, context.currentTime + 0.08)
+        n.gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 1.8)
+      }
+      timers.push(window.setInterval(rumble, 7000 + Math.random() * 5000))
+      rumble()
+      break
+    }
+    case 'train': {
+      const n = startNoise(context, bus, 'lowpass', 320, 0.22)
       sources.push(n.source, n.filter, n.gain)
+      const rhythm = startLfoTone(context, bus, 55, 0.04, 2.4)
+      sources.push(rhythm.osc, rhythm.lfo, rhythm.gain)
+      break
+    }
+    case 'pages': {
+      const turn = () => {
+        const n = startNoise(context, bus, 'bandpass', 1800, 0.001)
+        sources.push(n.source, n.filter, n.gain)
+        n.gain.gain.setValueAtTime(0.001, context.currentTime)
+        n.gain.gain.linearRampToValueAtTime(0.12, context.currentTime + 0.02)
+        n.gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.25)
+      }
+      timers.push(window.setInterval(turn, 4200))
+      break
+    }
+    case 'keyboard': {
+      const click = () => {
+        const o = context.createOscillator()
+        const g = context.createGain()
+        o.type = 'square'
+        o.frequency.value = 800 + Math.random() * 600
+        g.gain.value = 0.018
+        o.connect(g)
+        g.connect(bus)
+        o.start()
+        g.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.04)
+        o.stop(context.currentTime + 0.05)
+      }
+      timers.push(window.setInterval(click, 140 + Math.random() * 80))
+      break
+    }
+    case 'clock': {
+      const tick = () => {
+        const o = context.createOscillator()
+        const g = context.createGain()
+        o.type = 'sine'
+        o.frequency.value = 1200
+        g.gain.value = 0.02
+        o.connect(g)
+        g.connect(bus)
+        o.start()
+        g.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.03)
+        o.stop(context.currentTime + 0.04)
+      }
+      timers.push(window.setInterval(tick, 1000))
       break
     }
   }
 
-  active = { gain: bus, sources, timers }
+  return { sources, timers }
 }
 
-export function setAmbientVolume(volume: number) {
-  if (master) master.gain.value = Math.max(0, Math.min(1, volume))
-}
-
-export function stopAmbient() {
+function stopLayer(kind: AmbientSoundKind) {
+  const active = layers.get(kind)
   if (!active) return
   for (const t of active.timers) window.clearInterval(t)
   for (const node of active.sources) {
     try {
       if ('stop' in node && typeof node.stop === 'function') node.stop()
     } catch {
-      /* already stopped */
+      /* ignore */
     }
     try {
       node.disconnect()
     } catch {
-      /* already disconnected */
+      /* ignore */
     }
   }
   try {
@@ -212,36 +252,36 @@ export function stopAmbient() {
   } catch {
     /* ignore */
   }
-  active = null
+  layers.delete(kind)
 }
 
-const alertPresets: Record<AlertSoundId, { freqs: number[]; type: OscillatorType; gap: number }> = {
-  chime: { freqs: [523.25, 659.25, 783.99], type: 'sine', gap: 0.12 },
-  bell: { freqs: [392, 523.25], type: 'triangle', gap: 0.18 },
-  soft: { freqs: [349.23, 440], type: 'sine', gap: 0.2 },
-  bright: { freqs: [659.25, 880, 1046.5], type: 'sine', gap: 0.09 },
-  wood: { freqs: [220, 277.18], type: 'square', gap: 0.08 },
-}
-
-export function playChime(id: AlertSoundId = 'chime') {
+export async function syncAmbientLayers(states: SoundLayerState[]) {
   const { ctx: context, master: out } = ensureContext()
-  void context.resume()
-  const preset = alertPresets[id] ?? alertPresets.chime
-  const now = context.currentTime
-  const volume = id === 'wood' ? 0.08 : 0.16
-  preset.freqs.forEach((freq, i) => {
-    const osc = context.createOscillator()
-    const gain = context.createGain()
-    osc.type = preset.type
-    osc.frequency.value = freq
-    gain.gain.value = 0
-    osc.connect(gain)
-    gain.connect(out)
-    const t = now + i * preset.gap
-    gain.gain.setValueAtTime(0, t)
-    gain.gain.linearRampToValueAtTime(volume, t + 0.03)
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55)
-    osc.start(t)
-    osc.stop(t + 0.6)
-  })
+  if (context.state === 'suspended') await context.resume()
+
+  const wanted = new Set(
+    states.filter((s) => s.enabled && s.volume > 0.01).map((s) => s.id),
+  )
+
+  for (const kind of [...layers.keys()]) {
+    if (!wanted.has(kind)) stopLayer(kind)
+  }
+
+  for (const state of states) {
+    if (!state.enabled || state.volume <= 0.01) continue
+    const existing = layers.get(state.id)
+    if (existing) {
+      existing.gain.gain.value = state.volume
+      continue
+    }
+    const bus = context.createGain()
+    bus.gain.value = state.volume
+    bus.connect(out)
+    const built = buildKind(context, bus, state.id)
+    layers.set(state.id, { gain: bus, sources: built.sources, timers: built.timers })
+  }
+}
+
+export function stopAllAmbientLayers() {
+  for (const kind of [...layers.keys()]) stopLayer(kind)
 }

@@ -175,6 +175,16 @@ export function SettingsPanel() {
             or OS power settings may still sleep the machine.
           </p>
           <Toggle
+            label="Reduce environment motion"
+            on={settings.reduceEnvironmentMotion}
+            onToggle={() =>
+              updateSettings({ reduceEnvironmentMotion: !settings.reduceEnvironmentMotion })
+            }
+          />
+          <p className="helper">
+            Pauses weather particles and subtle atmospheric motion overlays.
+          </p>
+          <Toggle
             label="Complete active task when focus ends"
             on={settings.completeTaskOnFocusEnd}
             onToggle={() =>

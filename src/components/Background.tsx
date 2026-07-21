@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { EnvironmentAtmosphere } from './environment/EnvironmentAtmosphere'
+import { findEnvironment } from '../data/environments'
 import { themes } from '../data/themes'
 import { extractYoutubeId, toYoutubeEmbed } from '../lib/youtube'
 import { useAppStore } from '../store/useAppStore'
@@ -49,6 +51,7 @@ export function Background() {
   const focusThemeId = useAppStore((s) => s.focusThemeId)
   const ambientThemeId = useAppStore((s) => s.ambientThemeId)
   const customBackground = useAppStore((s) => s.customBackground)
+  const customEnvironments = useAppStore((s) => s.customEnvironments)
   const overlayStrength = useAppStore((s) => s.settings.overlayStrength)
   const autoOverlay = useAppStore((s) => s.settings.autoOverlay)
   const settings = useAppStore((s) => s.settings)
@@ -56,8 +59,11 @@ export function Background() {
 
   const themeId =
     mode === 'focus' ? focusThemeId : mode === 'ambient' ? ambientThemeId : homeThemeId
+
+  const environment = findEnvironment(themeId, customEnvironments)
   const theme = themes.find((t) => t.id === themeId) ?? themes[0]
-  const image = customBackground || theme.image
+  const image = customBackground || environment?.image || theme.image
+  const personalization = environment?.personalization
 
   const customVideoUrl =
     mode === 'focus'
@@ -66,8 +72,8 @@ export function Background() {
         ? settings.ambientVideoUrl
         : settings.homeVideoUrl
 
-  // Custom YouTube override wins; otherwise use the theme's built-in looping video.
-  const activeVideo = customVideoUrl.trim() || (!customBackground ? theme.video ?? '' : '')
+  const themeVideo = environment?.video ?? theme.video ?? ''
+  const activeVideo = customVideoUrl.trim() || (!customBackground ? themeVideo : '')
   const youtubeEmbed = useMemo(
     () => (extractYoutubeId(activeVideo) ? toYoutubeEmbed(activeVideo, { background: true }) : ''),
     [activeVideo],
@@ -86,16 +92,21 @@ export function Background() {
     }
   }, [image, hasVideo, autoOverlay])
 
-  const baseOverlay = customBackground ? overlayStrength : theme.overlay
+  const baseOverlay = customBackground
+    ? overlayStrength
+    : (personalization?.overlay ?? theme.overlay)
   const autoBoost = autoOverlay && !hasVideo ? Math.max(0, (brightness - 0.42) * 0.55) : 0
-  // Slightly lighter overlay on video so motion (rain, people) stays visible
   const videoBias = hasVideo ? -0.12 : -0.04
   const overlay = Math.min(0.72, Math.max(0.12, baseOverlay + autoBoost + videoBias))
+
+  const gradeFilter = personalization
+    ? `brightness(${personalization.brightness}) saturate(${personalization.saturation}) blur(${personalization.blur}px)`
+    : undefined
 
   return (
     <>
       {youtubeEmbed ? (
-        <div className="bg-video" aria-hidden>
+        <div className="bg-video" style={{ filter: gradeFilter }} aria-hidden>
           <iframe
             src={youtubeEmbed}
             title="Background video"
@@ -104,11 +115,11 @@ export function Background() {
           />
         </div>
       ) : nativeVideo ? (
-        <div className="bg-video bg-video-native" aria-hidden>
+        <div className="bg-video bg-video-native" style={{ filter: gradeFilter }} aria-hidden>
           <video
             key={nativeVideo}
             src={nativeVideo}
-            poster={theme.image}
+            poster={image}
             autoPlay
             muted
             loop
@@ -119,9 +130,12 @@ export function Background() {
       ) : (
         <div
           className="bg-layer"
-          style={{ backgroundImage: `url(${image})` }}
+          style={{ backgroundImage: `url(${image})`, filter: gradeFilter }}
           aria-hidden
         />
+      )}
+      {personalization && (
+        <EnvironmentAtmosphere personalization={personalization} active={!customBackground} />
       )}
       <div className="bg-overlay" style={{ opacity: overlay }} aria-hidden />
       <div className="grain" aria-hidden />

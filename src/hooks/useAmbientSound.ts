@@ -1,19 +1,15 @@
 import { useEffect } from 'react'
-import { ambientSounds } from '../data/sounds'
-import { playAmbient, setAmbientVolume, stopAmbient } from '../lib/audio'
+import { stopAmbient } from '../lib/audio'
+import { stopAllAmbientLayers, syncAmbientLayers } from '../lib/audioLayers'
 import { useAppStore } from '../store/useAppStore'
 
 export function useAmbientSound() {
-  const activeSoundId = useAppStore((s) => s.activeSoundId)
-  const soundVolume = useAppStore((s) => s.soundVolume)
+  const soundLayers = useAppStore((s) => s.soundLayers)
 
   useEffect(() => {
-    const sound = ambientSounds.find((s) => s.id === activeSoundId) ?? null
-    void playAmbient(sound, soundVolume)
-    return () => stopAmbient()
-  }, [activeSoundId])
-
-  useEffect(() => {
-    setAmbientVolume(soundVolume)
-  }, [soundVolume])
+    // Legacy single-bus ambient is replaced by layered playback.
+    stopAmbient()
+    void syncAmbientLayers(soundLayers)
+    return () => stopAllAmbientLayers()
+  }, [soundLayers])
 }
