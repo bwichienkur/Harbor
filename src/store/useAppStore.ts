@@ -117,8 +117,8 @@ export interface AppState {
   resetTimerLayout: () => void
   setTaskDockLayout: (layout: TaskDockLayout) => void
   resetTaskDockLayout: () => void
-  /** Clear filled session tally icons (pomodoro cycle count). */
-  resetFocusSessions: () => void
+      /** Clear filled session tally icons only — does not touch the timer. */
+      resetFocusSessions: () => void
   setActiveTask: (id: string | null) => void
   setRoom: (patch: Partial<StudyRoomState>) => void
   applyRoomSnapshot: (snapshot: RoomTimerSnapshot) => void

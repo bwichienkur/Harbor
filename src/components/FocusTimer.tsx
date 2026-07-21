@@ -201,9 +201,9 @@ export function FocusTimer() {
           {!guestLocked && (
             <button
               type="button"
-              className="timer-reset-pos timer-chrome"
-              title="Reset session tally"
-              aria-label="Reset session tally icons"
+              className="timer-reset-pos timer-chrome session-reset-btn"
+              title="Clear session icons only — does not reset the timer"
+              aria-label="Clear session icons only"
               onPointerDown={(e) => e.stopPropagation()}
               onClick={() => resetFocusSessions()}
             >
@@ -298,9 +298,15 @@ export function FocusTimer() {
             Skip
           </button>
         )}
-        {!guestLocked && !running && (
-          <button className="btn" onClick={resetTimer}>
-            Reset
+        {!guestLocked && (!running || hovered || clearMode) && (
+          <button
+            className="btn"
+            type="button"
+            title="Reset the timer only — keeps session icons"
+            aria-label="Reset timer only"
+            onClick={resetTimer}
+          >
+            Reset timer
           </button>
         )}
       </div>
