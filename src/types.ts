@@ -100,6 +100,7 @@ export interface AppSettings {
   showTasks: boolean
   showNotepad: boolean
   showTasksOnFocus: boolean
+  showClockOnFocus: boolean
   sessionIconShape: SessionIconShape
   overlayStrength: number
   youtubeUrl: string
@@ -177,6 +178,7 @@ export interface HarborBackup {
   completedFocusCount: number
   timerLayout: TimerLayout | null
   taskDockLayout: TaskDockLayout | null
+  clockLayout: TimerLayout | null
   soundLayers: SoundLayerState[]
   soundPresets: { id: string; name: string; layers: SoundLayerState[] }[]
 }

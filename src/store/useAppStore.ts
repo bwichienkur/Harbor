@@ -31,6 +31,10 @@ export const DEFAULT_TASK_DOCK_HEIGHT = 220
 export const MIN_TASK_DOCK_HEIGHT = 140
 export const MAX_TASK_DOCK_HEIGHT = 520
 
+export const DEFAULT_CLOCK_WIDTH = 220
+export const MIN_CLOCK_WIDTH = 140
+export const MAX_CLOCK_WIDTH = 480
+
 function uid() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 }
@@ -100,6 +104,7 @@ export interface AppState {
   activeTaskId: string | null
   timerLayout: TimerLayout | null
   taskDockLayout: TaskDockLayout | null
+  clockLayout: TimerLayout | null
   clearMode: boolean
   miniTimer: boolean
   room: StudyRoomState
@@ -126,8 +131,10 @@ export interface AppState {
   resetTimerLayout: () => void
   setTaskDockLayout: (layout: TaskDockLayout) => void
   resetTaskDockLayout: () => void
-      /** Clear filled session tally icons only — does not touch the timer. */
-      resetFocusSessions: () => void
+  setClockLayout: (layout: TimerLayout) => void
+  resetClockLayout: () => void
+  /** Clear filled session tally icons only — does not touch the timer. */
+  resetFocusSessions: () => void
   setActiveTask: (id: string | null) => void
   setRoom: (patch: Partial<StudyRoomState>) => void
   applyRoomSnapshot: (snapshot: RoomTimerSnapshot) => void
@@ -178,6 +185,7 @@ const defaultSettings: AppSettings = {
   showTasks: true,
   showNotepad: true,
   showTasksOnFocus: true,
+  showClockOnFocus: true,
   sessionIconShape: 'heart',
   overlayStrength: 0.45,
   youtubeUrl: '',
@@ -261,6 +269,7 @@ export const useAppStore = create<AppState>()(
       activeTaskId: null,
       timerLayout: null,
       taskDockLayout: null,
+      clockLayout: null,
       clearMode: false,
       miniTimer: false,
       room: {
@@ -387,6 +396,8 @@ export const useAppStore = create<AppState>()(
       resetTimerLayout: () => set({ timerLayout: null }),
       setTaskDockLayout: (layout) => set({ taskDockLayout: layout }),
       resetTaskDockLayout: () => set({ taskDockLayout: null }),
+      setClockLayout: (layout) => set({ clockLayout: layout }),
+      resetClockLayout: () => set({ clockLayout: null }),
       resetFocusSessions: () => set({ completedFocusCount: 0 }),
       setActiveTask: (id) => set({ activeTaskId: id }),
 
@@ -641,6 +652,7 @@ export const useAppStore = create<AppState>()(
           completedFocusCount: s.completedFocusCount,
           timerLayout: s.timerLayout,
           taskDockLayout: s.taskDockLayout,
+          clockLayout: s.clockLayout,
           soundLayers: s.soundLayers,
           soundPresets: s.soundPresets,
         }
@@ -662,6 +674,7 @@ export const useAppStore = create<AppState>()(
           completedFocusCount: backup.completedFocusCount ?? 0,
           timerLayout: backup.timerLayout ?? null,
           taskDockLayout: backup.taskDockLayout ?? null,
+          clockLayout: backup.clockLayout ?? null,
           soundLayers: backup.soundLayers ?? [],
           soundPresets: backup.soundPresets ?? [],
         })
@@ -704,6 +717,7 @@ export const useAppStore = create<AppState>()(
         completedFocusCount: s.completedFocusCount,
         timerLayout: s.timerLayout,
         taskDockLayout: s.taskDockLayout,
+        clockLayout: s.clockLayout,
         clearMode: s.clearMode,
         activeTaskId: s.activeTaskId,
         mode: s.mode,

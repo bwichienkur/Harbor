@@ -1625,6 +1625,95 @@ button {
   color: #f4f1ea;
 }
 
+/* Focus / Break wall clock widget */
+.focus-clock {
+  position: absolute;
+  z-index: 4;
+  padding: calc(0.45rem * var(--clock-scale, 1)) calc(0.65rem * var(--clock-scale, 1))
+    calc(0.7rem * var(--clock-scale, 1));
+  border-radius: 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ink);
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  display: grid;
+  gap: calc(0.2rem * var(--clock-scale, 1));
+  justify-items: stretch;
+}
+
+.focus-clock.interacting {
+  border-color: rgba(244, 241, 234, 0.16);
+  background: rgba(12, 20, 20, 0.22);
+  backdrop-filter: blur(8px);
+}
+
+.focus-clock-drag {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  cursor: grab;
+  opacity: 0.55;
+}
+
+.focus-clock.interacting .focus-clock-drag {
+  cursor: grabbing;
+  opacity: 1;
+}
+
+.focus-clock:hover .focus-clock-drag {
+  opacity: 0.9;
+}
+
+.focus-clock-reset {
+  color: var(--ink-soft);
+}
+
+.focus-clock-time {
+  font-family: var(--font-time);
+  font-size: calc(2.4rem * var(--clock-scale, 1));
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.55), 0 0 2px rgba(0, 0, 0, 0.4);
+}
+
+.focus-clock-resize {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  cursor: ew-resize;
+  background:
+    linear-gradient(
+      135deg,
+      transparent 45%,
+      rgba(244, 241, 234, 0.35) 46%,
+      rgba(244, 241, 234, 0.35) 54%,
+      transparent 55%
+    ),
+    linear-gradient(
+      135deg,
+      transparent 65%,
+      rgba(244, 241, 234, 0.45) 66%,
+      rgba(244, 241, 234, 0.45) 74%,
+      transparent 75%
+    );
+  opacity: 0.45;
+}
+
+.focus-clock-resize:hover,
+.focus-clock.interacting .focus-clock-resize {
+  opacity: 1;
+}
+
 .sound-layer-card {
   display: grid;
   gap: 0.35rem;

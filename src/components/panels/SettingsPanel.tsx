@@ -74,6 +74,11 @@ export function SettingsPanel() {
             onToggle={() => updateSettings({ showClock: !settings.showClock })}
           />
           <Toggle
+            label="Show clock on Focus / Break"
+            on={settings.showClockOnFocus}
+            onToggle={() => updateSettings({ showClockOnFocus: !settings.showClockOnFocus })}
+          />
+          <Toggle
             label="Show Add Task on home"
             on={settings.showTasks}
             onToggle={() => updateSettings({ showTasks: !settings.showTasks })}
