@@ -1,6 +1,11 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { themes } from '../data/themes'
+import {
+  captureLayoutAsRelative,
+  findLayoutTemplate,
+  resolveLayoutTemplate,
+} from '../data/layoutTemplates'
 import { etaToMinutes } from '../lib/format'
 import type {
   AppSettings,
@@ -18,6 +23,7 @@ import type {
   TimerPhase,
   TimerSettings,
   RoomTimerSnapshot,
+  WidgetLayoutTemplate,
 } from '../types'
 
 export const DEFAULT_TIMER_WIDTH = 420
@@ -105,6 +111,8 @@ export interface AppState {
   timerLayout: TimerLayout | null
   taskDockLayout: TaskDockLayout | null
   clockLayout: TimerLayout | null
+  activeLayoutTemplateId: string
+  customLayoutTemplates: WidgetLayoutTemplate[]
   clearMode: boolean
   miniTimer: boolean
   room: StudyRoomState
@@ -133,6 +141,9 @@ export interface AppState {
   resetTaskDockLayout: () => void
   setClockLayout: (layout: TimerLayout) => void
   resetClockLayout: () => void
+  applyLayoutTemplate: (id: string) => void
+  saveCurrentLayoutTemplate: (name: string) => void
+  removeLayoutTemplate: (id: string) => void
   /** Clear filled session tally icons only — does not touch the timer. */
   resetFocusSessions: () => void
   setActiveTask: (id: string | null) => void
@@ -270,6 +281,8 @@ export const useAppStore = create<AppState>()(
       timerLayout: null,
       taskDockLayout: null,
       clockLayout: null,
+      activeLayoutTemplateId: 'classic',
+      customLayoutTemplates: [],
       clearMode: false,
       miniTimer: false,
       room: {
@@ -392,12 +405,51 @@ export const useAppStore = create<AppState>()(
       removeSoundPreset: (id) =>
         set((s) => ({ soundPresets: s.soundPresets.filter((p) => p.id !== id) })),
       setNotepad: (text) => set({ notepad: text }),
-      setTimerLayout: (layout) => set({ timerLayout: layout }),
-      resetTimerLayout: () => set({ timerLayout: null }),
-      setTaskDockLayout: (layout) => set({ taskDockLayout: layout }),
-      resetTaskDockLayout: () => set({ taskDockLayout: null }),
-      setClockLayout: (layout) => set({ clockLayout: layout }),
-      resetClockLayout: () => set({ clockLayout: null }),
+      setTimerLayout: (layout) =>
+        set({ timerLayout: layout, activeLayoutTemplateId: 'custom' }),
+      resetTimerLayout: () => set({ timerLayout: null, activeLayoutTemplateId: 'custom' }),
+      setTaskDockLayout: (layout) =>
+        set({ taskDockLayout: layout, activeLayoutTemplateId: 'custom' }),
+      resetTaskDockLayout: () =>
+        set({ taskDockLayout: null, activeLayoutTemplateId: 'custom' }),
+      setClockLayout: (layout) =>
+        set({ clockLayout: layout, activeLayoutTemplateId: 'custom' }),
+      resetClockLayout: () => set({ clockLayout: null, activeLayoutTemplateId: 'custom' }),
+      applyLayoutTemplate: (id) => {
+        const template = findLayoutTemplate(id, get().customLayoutTemplates)
+        if (!template) return
+        const resolved = resolveLayoutTemplate(template)
+        set({
+          activeLayoutTemplateId: id,
+          timerLayout: resolved.timer,
+          clockLayout: resolved.clock,
+          taskDockLayout: resolved.tasks,
+        })
+      },
+      saveCurrentLayoutTemplate: (name) => {
+        const trimmed = name.trim()
+        if (!trimmed) return
+        const s = get()
+        if (!s.timerLayout || !s.clockLayout || !s.taskDockLayout) return
+        const template = captureLayoutAsRelative(
+          {
+            timer: s.timerLayout,
+            clock: s.clockLayout,
+            tasks: s.taskDockLayout,
+          },
+          { id: `layout-${uid()}`, name: trimmed },
+        )
+        set((state) => ({
+          customLayoutTemplates: [...state.customLayoutTemplates, template],
+          activeLayoutTemplateId: template.id,
+        }))
+      },
+      removeLayoutTemplate: (id) =>
+        set((s) => ({
+          customLayoutTemplates: s.customLayoutTemplates.filter((t) => t.id !== id),
+          activeLayoutTemplateId:
+            s.activeLayoutTemplateId === id ? 'custom' : s.activeLayoutTemplateId,
+        })),
       resetFocusSessions: () => set({ completedFocusCount: 0 }),
       setActiveTask: (id) => set({ activeTaskId: id }),
 
@@ -655,6 +707,8 @@ export const useAppStore = create<AppState>()(
           clockLayout: s.clockLayout,
           soundLayers: s.soundLayers,
           soundPresets: s.soundPresets,
+          activeLayoutTemplateId: s.activeLayoutTemplateId,
+          customLayoutTemplates: s.customLayoutTemplates,
         }
       },
 
@@ -668,7 +722,7 @@ export const useAppStore = create<AppState>()(
           sessions: backup.sessions ?? [],
           homeThemeId: backup.homeThemeId ?? themes[0].id,
           focusThemeId: backup.focusThemeId ?? themes[1].id,
-          ambientThemeId: backup.ambientThemeId ?? themes[6].id,
+          ambientThemeId: backup.ambientThemeId ?? themes[2].id,
           activeSoundId: backup.activeSoundId ?? null,
           soundVolume: backup.soundVolume ?? 0.35,
           completedFocusCount: backup.completedFocusCount ?? 0,
@@ -677,6 +731,8 @@ export const useAppStore = create<AppState>()(
           clockLayout: backup.clockLayout ?? null,
           soundLayers: backup.soundLayers ?? [],
           soundPresets: backup.soundPresets ?? [],
+          activeLayoutTemplateId: backup.activeLayoutTemplateId ?? 'custom',
+          customLayoutTemplates: backup.customLayoutTemplates ?? [],
         })
       },
     }),
@@ -698,6 +754,8 @@ export const useAppStore = create<AppState>()(
           tasks: (p.tasks ?? current.tasks).map((t) => normalizeTask(t)),
           soundLayers: p.soundLayers ?? current.soundLayers,
           soundPresets: p.soundPresets ?? current.soundPresets,
+          customLayoutTemplates: p.customLayoutTemplates ?? current.customLayoutTemplates,
+          activeLayoutTemplateId: p.activeLayoutTemplateId ?? current.activeLayoutTemplateId,
         }
       },
       partialize: (s) => ({
@@ -718,6 +776,8 @@ export const useAppStore = create<AppState>()(
         timerLayout: s.timerLayout,
         taskDockLayout: s.taskDockLayout,
         clockLayout: s.clockLayout,
+        activeLayoutTemplateId: s.activeLayoutTemplateId,
+        customLayoutTemplates: s.customLayoutTemplates,
         clearMode: s.clearMode,
         activeTaskId: s.activeTaskId,
         mode: s.mode,

@@ -1714,6 +1714,49 @@ button {
   opacity: 1;
 }
 
+.layout-template-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.layout-template-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem;
+  align-items: start;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.layout-template-card.active {
+  border-color: rgba(125, 184, 168, 0.55);
+  background: rgba(125, 184, 168, 0.14);
+}
+
+.layout-template-main {
+  display: grid;
+  gap: 0.2rem;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  padding: 0;
+}
+
+.layout-template-main strong {
+  font-size: 0.95rem;
+}
+
+.layout-template-main em {
+  font-style: normal;
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .sound-layer-card {
   display: grid;
   gap: 0.35rem;

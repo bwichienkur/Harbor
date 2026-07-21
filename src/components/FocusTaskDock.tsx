@@ -75,10 +75,8 @@ export function FocusTaskDock() {
       setLocal(clampLayout(taskDockLayout))
       return
     }
-    const next = defaultLayout()
-    setLocal(next)
-    setTaskDockLayout(next)
-  }, [taskDockLayout, setTaskDockLayout])
+    setLocal(defaultLayout())
+  }, [taskDockLayout])
 
   useEffect(() => {
     const onResize = () => {

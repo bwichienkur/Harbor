@@ -162,6 +162,29 @@ export interface TaskDockLayout {
   height: number
 }
 
+export type LayoutAnchorX = 'left' | 'center' | 'right'
+export type LayoutAnchorY = 'top' | 'center' | 'bottom'
+
+export interface LayoutPlacement {
+  anchorX: LayoutAnchorX
+  anchorY: LayoutAnchorY
+  offsetX?: number
+  offsetY?: number
+  width: number
+  height?: number
+}
+
+/** Named arrangement for timer, clock, and task widgets. */
+export interface WidgetLayoutTemplate {
+  id: string
+  name: string
+  description: string
+  builtin: boolean
+  timer: LayoutPlacement
+  clock: LayoutPlacement
+  tasks: LayoutPlacement & { height: number }
+}
+
 export interface HarborBackup {
   version: 1
   exportedAt: number
@@ -181,4 +204,7 @@ export interface HarborBackup {
   clockLayout: TimerLayout | null
   soundLayers: SoundLayerState[]
   soundPresets: { id: string; name: string; layers: SoundLayerState[] }[]
+  /** Active layout template id, or `"custom"` when freeform. */
+  activeLayoutTemplateId: string
+  customLayoutTemplates: WidgetLayoutTemplate[]
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { siteFontPresets } from '../../data/fonts'
+import { allLayoutTemplates } from '../../data/layoutTemplates'
 import { playChime } from '../../lib/audio'
 import { requestNotificationPermission } from '../../lib/notifications'
 import { downloadText } from '../../lib/stats'
@@ -22,7 +23,7 @@ const alerts: { id: AlertSoundId; label: string }[] = [
   { id: 'wood', label: 'Wood' },
 ]
 
-type Tab = 'general' | 'timer' | 'alerts' | 'backup'
+type Tab = 'general' | 'layout' | 'timer' | 'alerts' | 'backup'
 
 export function SettingsPanel() {
   const settings = useAppStore((s) => s.settings)
@@ -32,7 +33,19 @@ export function SettingsPanel() {
   const resetTimer = useAppStore((s) => s.resetTimer)
   const exportBackup = useAppStore((s) => s.exportBackup)
   const importBackup = useAppStore((s) => s.importBackup)
+  const activeLayoutTemplateId = useAppStore((s) => s.activeLayoutTemplateId)
+  const customLayoutTemplates = useAppStore((s) => s.customLayoutTemplates)
+  const applyLayoutTemplate = useAppStore((s) => s.applyLayoutTemplate)
+  const saveCurrentLayoutTemplate = useAppStore((s) => s.saveCurrentLayoutTemplate)
+  const removeLayoutTemplate = useAppStore((s) => s.removeLayoutTemplate)
+  const timerLayout = useAppStore((s) => s.timerLayout)
+  const clockLayout = useAppStore((s) => s.clockLayout)
+  const taskDockLayout = useAppStore((s) => s.taskDockLayout)
   const [tab, setTab] = useState<Tab>('general')
+  const [layoutName, setLayoutName] = useState('')
+
+  const layouts = allLayoutTemplates(customLayoutTemplates)
+  const canSaveLayout = Boolean(timerLayout && clockLayout && taskDockLayout)
 
   return (
     <div className="panel-section">
@@ -40,6 +53,7 @@ export function SettingsPanel() {
         {(
           [
             ['general', 'General'],
+            ['layout', 'Layout'],
             ['timer', 'Timer'],
             ['alerts', 'Alerts'],
             ['backup', 'Backup'],
@@ -208,6 +222,76 @@ export function SettingsPanel() {
           >
             Show welcome again
           </button>
+        </>
+      )}
+
+      {tab === 'layout' && (
+        <>
+          <p className="helper">
+            Choose where the timer, clock, and task list sit on Focus / Break. Dragging a widget
+            switches to a freeform layout — save it as your own template anytime.
+          </p>
+          {activeLayoutTemplateId === 'custom' && (
+            <p className="helper">Current arrangement: <strong>Custom (freeform)</strong></p>
+          )}
+          <div className="layout-template-list">
+            {layouts.map((template) => {
+              const active = activeLayoutTemplateId === template.id
+              return (
+                <div
+                  key={template.id}
+                  className={`layout-template-card ${active ? 'active' : ''}`}
+                >
+                  <button
+                    type="button"
+                    className="layout-template-main"
+                    onClick={() => applyLayoutTemplate(template.id)}
+                  >
+                    <strong>{template.name}</strong>
+                    <span className="helper">{template.description}</span>
+                    {active && <em>Applied</em>}
+                  </button>
+                  {!template.builtin && (
+                    <button
+                      type="button"
+                      className="tiny"
+                      aria-label={`Delete ${template.name}`}
+                      onClick={() => removeLayoutTemplate(template.id)}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          <h3 className="panel-subhead">Save current layout</h3>
+          <div className="field">
+            <label htmlFor="layout-name">Template name</label>
+            <input
+              id="layout-name"
+              value={layoutName}
+              onChange={(e) => setLayoutName(e.target.value)}
+              placeholder="My focus desk"
+              disabled={!canSaveLayout}
+            />
+            <button
+              type="button"
+              className="btn primary"
+              disabled={!canSaveLayout || !layoutName.trim()}
+              onClick={() => {
+                saveCurrentLayoutTemplate(layoutName)
+                setLayoutName('')
+              }}
+            >
+              Save as template
+            </button>
+            {!canSaveLayout && (
+              <p className="helper">
+                Open Focus once and arrange the widgets (or apply a template) before saving.
+              </p>
+            )}
+          </div>
         </>
       )}
 

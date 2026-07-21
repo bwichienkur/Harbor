@@ -88,10 +88,8 @@ export function FocusTimer() {
       setLocal(clampLayout(timerLayout, clearMode))
       return
     }
-    const centered = centerLayout()
-    setLocal(centered)
-    setTimerLayout(centered)
-  }, [timerLayout, setTimerLayout, clearMode])
+    setLocal(centerLayout())
+  }, [timerLayout, clearMode])
 
   useEffect(() => {
     const onResize = () => {

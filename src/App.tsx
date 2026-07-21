@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Background } from './components/Background'
 import { ClearModeEscape } from './components/ClearModeEscape'
 import { FocusClock } from './components/FocusClock'
@@ -28,6 +29,14 @@ export default function App() {
   const softClearFocus = useAppStore((s) => s.settings.softClearFocus)
   const highContrast = useAppStore((s) => s.settings.highContrast)
   const softFocus = mode === 'focus' && running && softClearFocus && !clearMode
+  const applyLayoutTemplate = useAppStore((s) => s.applyLayoutTemplate)
+
+  useEffect(() => {
+    const state = useAppStore.getState()
+    if (!state.timerLayout && state.activeLayoutTemplateId !== 'custom') {
+      applyLayoutTemplate(state.activeLayoutTemplateId || 'classic')
+    }
+  }, [applyLayoutTemplate])
 
   return (
     <div

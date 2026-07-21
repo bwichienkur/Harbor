@@ -58,10 +58,8 @@ export function FocusClock() {
       setLocal(clampLayout(clockLayout, clearMode))
       return
     }
-    const next = defaultLayout()
-    setLocal(next)
-    setClockLayout(next)
-  }, [clockLayout, setClockLayout, clearMode])
+    setLocal(defaultLayout())
+  }, [clockLayout, clearMode])
 
   useEffect(() => {
     const onResize = () => {
