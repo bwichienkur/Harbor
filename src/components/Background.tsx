@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { EnvironmentAtmosphere } from './environment/EnvironmentAtmosphere'
-import { findEnvironment } from '../data/environments'
 import { themes } from '../data/themes'
 import { extractYoutubeId, toYoutubeEmbed } from '../lib/youtube'
 import { useAppStore } from '../store/useAppStore'
@@ -36,7 +34,7 @@ async function estimateBrightness(src: string): Promise<number> {
   })
 }
 
-function isDirectVideoUrl(raw: string) {
+export function isDirectVideoUrl(raw: string) {
   try {
     const url = new URL(raw.trim())
     return /\.(mp4|webm|ogg)(\?|$)/i.test(url.pathname)
@@ -45,13 +43,13 @@ function isDirectVideoUrl(raw: string) {
   }
 }
 
-export function Background() {
-  const mode = useAppStore((s) => s.mode)
+/** Resolve the active visual theme for the current (or given) mode. */
+export function useActiveThemeMedia(forceMode?: 'home' | 'focus' | 'ambient') {
+  const mode = useAppStore((s) => forceMode ?? s.mode)
   const homeThemeId = useAppStore((s) => s.homeThemeId)
   const focusThemeId = useAppStore((s) => s.focusThemeId)
   const ambientThemeId = useAppStore((s) => s.ambientThemeId)
   const customBackground = useAppStore((s) => s.customBackground)
-  const customEnvironments = useAppStore((s) => s.customEnvironments)
   const overlayStrength = useAppStore((s) => s.settings.overlayStrength)
   const autoOverlay = useAppStore((s) => s.settings.autoOverlay)
   const settings = useAppStore((s) => s.settings)
@@ -59,11 +57,8 @@ export function Background() {
 
   const themeId =
     mode === 'focus' ? focusThemeId : mode === 'ambient' ? ambientThemeId : homeThemeId
-
-  const environment = findEnvironment(themeId, customEnvironments)
   const theme = themes.find((t) => t.id === themeId) ?? themes[0]
-  const image = customBackground || environment?.image || theme.image
-  const personalization = environment?.personalization
+  const image = customBackground || theme.image
 
   const customVideoUrl =
     mode === 'focus'
@@ -72,8 +67,7 @@ export function Background() {
         ? settings.ambientVideoUrl
         : settings.homeVideoUrl
 
-  const themeVideo = environment?.video ?? theme.video ?? ''
-  const activeVideo = customVideoUrl.trim() || (!customBackground ? themeVideo : '')
+  const activeVideo = customVideoUrl.trim() || (!customBackground ? theme.video ?? '' : '')
   const youtubeEmbed = useMemo(
     () => (extractYoutubeId(activeVideo) ? toYoutubeEmbed(activeVideo, { background: true }) : ''),
     [activeVideo],
@@ -92,21 +86,28 @@ export function Background() {
     }
   }, [image, hasVideo, autoOverlay])
 
-  const baseOverlay = customBackground
-    ? overlayStrength
-    : (personalization?.overlay ?? theme.overlay)
+  const baseOverlay = customBackground ? overlayStrength : theme.overlay
   const autoBoost = autoOverlay && !hasVideo ? Math.max(0, (brightness - 0.42) * 0.55) : 0
   const videoBias = hasVideo ? -0.12 : -0.04
   const overlay = Math.min(0.72, Math.max(0.12, baseOverlay + autoBoost + videoBias))
 
-  const gradeFilter = personalization
-    ? `brightness(${personalization.brightness}) saturate(${personalization.saturation}) blur(${personalization.blur}px)`
-    : undefined
+  return {
+    theme,
+    image,
+    youtubeEmbed,
+    nativeVideo,
+    hasVideo,
+    overlay,
+  }
+}
+
+export function Background() {
+  const { image, youtubeEmbed, nativeVideo, overlay } = useActiveThemeMedia()
 
   return (
     <>
       {youtubeEmbed ? (
-        <div className="bg-video" style={{ filter: gradeFilter }} aria-hidden>
+        <div className="bg-video" aria-hidden>
           <iframe
             src={youtubeEmbed}
             title="Background video"
@@ -115,7 +116,7 @@ export function Background() {
           />
         </div>
       ) : nativeVideo ? (
-        <div className="bg-video bg-video-native" style={{ filter: gradeFilter }} aria-hidden>
+        <div className="bg-video bg-video-native" aria-hidden>
           <video
             key={nativeVideo}
             src={nativeVideo}
@@ -128,14 +129,7 @@ export function Background() {
           />
         </div>
       ) : (
-        <div
-          className="bg-layer"
-          style={{ backgroundImage: `url(${image})`, filter: gradeFilter }}
-          aria-hidden
-        />
-      )}
-      {personalization && (
-        <EnvironmentAtmosphere personalization={personalization} active={!customBackground} />
+        <div className="bg-layer" style={{ backgroundImage: `url(${image})` }} aria-hidden />
       )}
       <div className="bg-overlay" style={{ opacity: overlay }} aria-hidden />
       <div className="grain" aria-hidden />

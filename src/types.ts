@@ -32,26 +32,6 @@ export interface Task {
 
 export type ThemeCategory = 'desk' | 'cafe' | 'library' | 'office'
 
-export type EnvCategory =
-  | ThemeCategory
-  | 'nature'
-  | 'city'
-  | 'fantasy'
-  | 'seasonal'
-
-export type WeatherKind = 'none' | 'rain' | 'snow' | 'fog' | 'storm' | 'dust'
-export type TimeOfDay = 'dawn' | 'morning' | 'afternoon' | 'golden' | 'blue' | 'night'
-export type Season = 'spring' | 'summer' | 'autumn' | 'winter'
-export type Viewpoint =
-  | 'desk'
-  | 'window'
-  | 'couch'
-  | 'reading'
-  | 'booth'
-  | 'balcony'
-  | 'train'
-  | 'rooftop'
-
 export type AmbientSoundKind =
   | 'rain'
   | 'ocean'
@@ -90,39 +70,6 @@ export interface SoundLayerState {
   id: AmbientSoundKind
   enabled: boolean
   volume: number
-}
-
-export interface EnvironmentPersonalization {
-  animationIntensity: number
-  weather: WeatherKind
-  timeOfDay: TimeOfDay
-  season: Season
-  brightness: number
-  blur: number
-  saturation: number
-  viewpoint: Viewpoint
-  overlay: number
-  /** Rain particle strength when weather is rain/storm (0–1). */
-  rainAmount: number
-  /** Snow particle strength when weather is snow (0–1). */
-  snowAmount: number
-}
-
-/** Modular focus environment — curated or AI-composed. */
-export interface FocusEnvironment {
-  id: string
-  name: string
-  category: EnvCategory
-  image: string
-  video?: string
-  animated?: boolean
-  curated: boolean
-  prompt?: string
-  refinedPrompt?: string
-  tags: string[]
-  personalization: EnvironmentPersonalization
-  soundLayers: SoundLayerState[]
-  createdAt: number
 }
 
 export interface FocusSession {
@@ -176,8 +123,6 @@ export interface AppSettings {
   customFont: string
   /** Keep the screen awake with Wake Lock while the timer is running. */
   keepAwakeWhileRunning: boolean
-  /** Pause environment particle/weather animations for accessibility. */
-  reduceEnvironmentMotion: boolean
 }
 
 export interface StudyRoomState {
@@ -232,7 +177,6 @@ export interface HarborBackup {
   completedFocusCount: number
   timerLayout: TimerLayout | null
   taskDockLayout: TaskDockLayout | null
-  customEnvironments: FocusEnvironment[]
   soundLayers: SoundLayerState[]
   soundPresets: { id: string; name: string; layers: SoundLayerState[] }[]
 }
