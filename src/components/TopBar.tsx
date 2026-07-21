@@ -82,7 +82,7 @@ export function TopBar() {
   }
 
   return (
-    <header className="top-bar">
+    <header className={`top-bar ${moreOpen ? 'menu-open' : ''}`}>
       <div className="brand">
         Harbor<span>.</span>
       </div>

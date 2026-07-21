@@ -214,35 +214,46 @@ export function SettingsPanel() {
               ))}
             </select>
           </div>
-          <NumberField
+          <SliderField
             label="Focus minutes"
             value={timerSettings.pomodoroMins}
+            min={1}
+            max={120}
             onChange={(v) => {
               updateTimerSettings({ pomodoroMins: v })
               resetTimer()
             }}
           />
-          <NumberField
+          <SliderField
             label="Short break minutes"
             value={timerSettings.shortBreakMins}
+            min={1}
+            max={60}
             onChange={(v) => updateTimerSettings({ shortBreakMins: v })}
           />
-          <NumberField
+          <SliderField
             label="Long break / watch minutes"
             value={timerSettings.longBreakMins}
+            min={1}
+            max={120}
             onChange={(v) => updateTimerSettings({ longBreakMins: v })}
           />
-          <NumberField
+          <SliderField
             label="Countdown minutes"
             value={timerSettings.countdownMins}
+            min={1}
+            max={180}
             onChange={(v) => {
               updateTimerSettings({ countdownMins: v })
               resetTimer()
             }}
           />
-          <NumberField
+          <SliderField
             label="Long break every N sessions"
             value={timerSettings.longBreakEvery}
+            min={1}
+            max={12}
+            unit="sessions"
             onChange={(v) => updateTimerSettings({ longBreakEvery: Math.max(1, v) })}
           />
           <Toggle
@@ -377,24 +388,40 @@ function Toggle({
   )
 }
 
-function NumberField({
+function SliderField({
   label,
   value,
   onChange,
+  min = 1,
+  max = 180,
+  step = 1,
+  unit = 'min',
 }: {
   label: string
   value: number
   onChange: (v: number) => void
+  min?: number
+  max?: number
+  step?: number
+  unit?: 'min' | 'sessions'
 }) {
+  const display =
+    unit === 'sessions' ? `${value} session${value === 1 ? '' : 's'}` : `${value}m`
+
   return (
-    <div className="field">
-      <label>{label}</label>
+    <div className="field duration-field">
+      <div className="duration-label-row">
+        <label>{label}</label>
+        <strong>{display}</strong>
+      </div>
       <input
-        type="number"
-        min={1}
-        max={180}
+        type="range"
+        min={min}
+        max={max}
+        step={step}
         value={value}
-        onChange={(e) => onChange(Number(e.target.value) || 1)}
+        aria-label={label}
+        onChange={(e) => onChange(Number(e.target.value) || min)}
       />
     </div>
   )

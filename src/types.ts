@@ -128,6 +128,14 @@ export interface TimerLayout {
   width: number
 }
 
+/** Position + size for the focus task dock widget. */
+export interface TaskDockLayout {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 export interface HarborBackup {
   version: 1
   exportedAt: number
@@ -143,4 +151,5 @@ export interface HarborBackup {
   soundVolume: number
   completedFocusCount: number
   timerLayout: TimerLayout | null
+  taskDockLayout: TaskDockLayout | null
 }

@@ -12,6 +12,7 @@ import type {
   TaskColor,
   TaskEta,
   TaskRecurrence,
+  TaskDockLayout,
   TimerLayout,
   TimerPhase,
   TimerSettings,
@@ -21,6 +22,13 @@ import type {
 export const DEFAULT_TIMER_WIDTH = 420
 export const MIN_TIMER_WIDTH = 240
 export const MAX_TIMER_WIDTH = 900
+
+export const DEFAULT_TASK_DOCK_WIDTH = 280
+export const MIN_TASK_DOCK_WIDTH = 200
+export const MAX_TASK_DOCK_WIDTH = 480
+export const DEFAULT_TASK_DOCK_HEIGHT = 220
+export const MIN_TASK_DOCK_HEIGHT = 140
+export const MAX_TASK_DOCK_HEIGHT = 520
 
 function uid() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
@@ -88,6 +96,7 @@ export interface AppState {
   focusStartedAt: number | null
   activeTaskId: string | null
   timerLayout: TimerLayout | null
+  taskDockLayout: TaskDockLayout | null
   clearMode: boolean
   miniTimer: boolean
   room: StudyRoomState
@@ -106,6 +115,8 @@ export interface AppState {
   setNotepad: (text: string) => void
   setTimerLayout: (layout: TimerLayout) => void
   resetTimerLayout: () => void
+  setTaskDockLayout: (layout: TaskDockLayout) => void
+  resetTaskDockLayout: () => void
   setActiveTask: (id: string | null) => void
   setRoom: (patch: Partial<StudyRoomState>) => void
   applyRoomSnapshot: (snapshot: RoomTimerSnapshot) => void
@@ -235,6 +246,7 @@ export const useAppStore = create<AppState>()(
       focusStartedAt: null,
       activeTaskId: null,
       timerLayout: null,
+      taskDockLayout: null,
       clearMode: false,
       miniTimer: false,
       room: {
@@ -298,6 +310,8 @@ export const useAppStore = create<AppState>()(
       setNotepad: (text) => set({ notepad: text }),
       setTimerLayout: (layout) => set({ timerLayout: layout }),
       resetTimerLayout: () => set({ timerLayout: null }),
+      setTaskDockLayout: (layout) => set({ taskDockLayout: layout }),
+      resetTaskDockLayout: () => set({ taskDockLayout: null }),
       setActiveTask: (id) => set({ activeTaskId: id }),
 
       addTask: (text, opts = {}) => {
@@ -550,6 +564,7 @@ export const useAppStore = create<AppState>()(
           soundVolume: s.soundVolume,
           completedFocusCount: s.completedFocusCount,
           timerLayout: s.timerLayout,
+          taskDockLayout: s.taskDockLayout,
         }
       },
 
@@ -568,6 +583,7 @@ export const useAppStore = create<AppState>()(
           soundVolume: backup.soundVolume ?? 0.35,
           completedFocusCount: backup.completedFocusCount ?? 0,
           timerLayout: backup.timerLayout ?? null,
+          taskDockLayout: backup.taskDockLayout ?? null,
         })
       },
     }),
@@ -611,6 +627,7 @@ export const useAppStore = create<AppState>()(
         sessions: s.sessions,
         completedFocusCount: s.completedFocusCount,
         timerLayout: s.timerLayout,
+        taskDockLayout: s.taskDockLayout,
         clearMode: s.clearMode,
         activeTaskId: s.activeTaskId,
         mode: s.mode,
