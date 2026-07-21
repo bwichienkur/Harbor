@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useActiveThemeMedia } from './Background'
 import { formatTimer } from '../lib/format'
+import type { DashMode, TimerPhase } from '../types'
 import { useAppStore } from '../store/useAppStore'
 
 declare global {
@@ -9,6 +10,13 @@ declare global {
       requestWindow: (options?: { width?: number; height?: number }) => Promise<Window>
     }
   }
+}
+
+/** Focus sessions use the Focus theme; breaks use the Ambient (break) theme. */
+function themeSlotForPhase(phase: TimerPhase, mode: DashMode): DashMode {
+  if (phase === 'focus') return 'focus'
+  if (phase === 'shortBreak' || phase === 'longBreak') return 'ambient'
+  return mode === 'home' ? 'home' : mode
 }
 
 function renderPipDocument(
@@ -58,19 +66,23 @@ function renderPipDocument(
   `
 }
 
+/**
+ * Document Picture-in-Picture controller only — no on-page overlay.
+ * The floating window can sit over other tabs/apps while Harbor keeps ticking.
+ */
 export function MiniTimer() {
   const miniTimer = useAppStore((s) => s.miniTimer)
   const setMiniTimer = useAppStore((s) => s.setMiniTimer)
-  const running = useAppStore((s) => s.running)
   const phase = useAppStore((s) => s.phase)
+  const mode = useAppStore((s) => s.mode)
   const remainingMs = useAppStore((s) => s.remainingMs)
   const elapsedMs = useAppStore((s) => s.elapsedMs)
   const timerMode = useAppStore((s) => s.timerSettings.mode)
-  const startTimer = useAppStore((s) => s.startTimer)
-  const pauseTimer = useAppStore((s) => s.pauseTimer)
-  const { image, youtubeEmbed, nativeVideo } = useActiveThemeMedia()
+
+  const themeSlot = themeSlotForPhase(phase, mode)
+  const { image, youtubeEmbed, nativeVideo } = useActiveThemeMedia(themeSlot)
   const pipWin = useRef<Window | null>(null)
-  const mediaKey = `${youtubeEmbed}|${nativeVideo}|${image}`
+  const mediaKey = `${themeSlot}|${youtubeEmbed}|${nativeVideo}|${image}`
 
   const displayMs = timerMode === 'stopwatch' ? elapsedMs : remainingMs
   const label = formatTimer(displayMs / 1000)
@@ -82,12 +94,19 @@ export function MiniTimer() {
       return
     }
 
+    if (!window.documentPictureInPicture) {
+      setMiniTimer(false)
+      window.alert(
+        'Picture-in-Picture isn’t supported in this browser. Try Chrome or Edge to float the timer over other pages.',
+      )
+      return
+    }
+
     let cancelled = false
 
     const mount = async () => {
-      if (!window.documentPictureInPicture) return
       try {
-        const win = await window.documentPictureInPicture.requestWindow({
+        const win = await window.documentPictureInPicture!.requestWindow({
           width: 320,
           height: 200,
         })
@@ -102,7 +121,7 @@ export function MiniTimer() {
           pipWin.current = null
         })
       } catch {
-        /* PiP unsupported or blocked — overlay fallback remains */
+        setMiniTimer(false)
       }
     }
 
@@ -120,7 +139,7 @@ export function MiniTimer() {
     const win = pipWin.current
     if (!win || !miniTimer) return
     renderPipDocument(win, { image, nativeVideo, youtubeEmbed, label, phase })
-    // Only rebuild when theme media changes — timer digits update separately.
+    // Rebuild only when focus/break theme media changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mediaKey, miniTimer])
 
@@ -133,35 +152,5 @@ export function MiniTimer() {
     if (phaseEl) phaseEl.textContent = phase
   }, [label, phase])
 
-  if (!miniTimer) return null
-
-  return (
-    <div className="mini-timer mini-timer-themed" role="dialog" aria-label="Mini timer">
-      <div className="mini-timer-media" aria-hidden>
-        {youtubeEmbed ? (
-          <iframe src={youtubeEmbed} title="Theme" allow="autoplay; encrypted-media" tabIndex={-1} />
-        ) : nativeVideo ? (
-          <video key={nativeVideo} src={nativeVideo} poster={image} autoPlay muted loop playsInline />
-        ) : (
-          <div className="mini-timer-still" style={{ backgroundImage: `url(${image})` }} />
-        )}
-      </div>
-      <div className="mini-timer-shade" aria-hidden />
-      <div className="mini-timer-content">
-        <div className="mini-timer-phase">{phase}</div>
-        <div className="mini-timer-digits">{label}</div>
-        <div className="timer-controls">
-          <button className="btn primary" onClick={() => (running ? pauseTimer() : startTimer())}>
-            {running ? 'Pause' : 'Start'}
-          </button>
-          <button className="btn" onClick={() => setMiniTimer(false)}>
-            Close
-          </button>
-        </div>
-        {!window.documentPictureInPicture && (
-          <p className="helper">Picture-in-Picture isn’t available here — using on-page mini timer.</p>
-        )}
-      </div>
-    </div>
-  )
+  return null
 }

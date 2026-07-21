@@ -225,8 +225,8 @@ export function FocusTimer() {
           <button
             type="button"
             className="timer-reset-pos"
-            title="Mini / Picture-in-Picture timer"
-            aria-label="Open mini timer"
+            title="Picture-in-Picture timer"
+            aria-label="Open picture-in-picture timer"
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => setMiniTimer(true)}
           >
