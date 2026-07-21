@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { themes } from '../data/themes'
+import { defaultThemeIds, themes } from '../data/themes'
 import {
   captureLayoutAsRelative,
   findLayoutTemplate,
@@ -270,9 +270,9 @@ export const useAppStore = create<AppState>()(
       completedFocusCount: 0,
       tasks: [],
       notepad: '',
-      homeThemeId: 'rainy-window-desk',
-      focusThemeId: 'rainy-lofi-cafe',
-      ambientThemeId: 'open-window-rain',
+      homeThemeId: defaultThemeIds.home,
+      focusThemeId: defaultThemeIds.focus,
+      ambientThemeId: defaultThemeIds.ambient,
       customBackground: null,
       activeSoundId: null,
       soundVolume: 0.35,
@@ -726,9 +726,9 @@ export const useAppStore = create<AppState>()(
           tasks: (backup.tasks ?? []).map((t) => normalizeTask(t)),
           notepad: backup.notepad ?? '',
           sessions: backup.sessions ?? [],
-          homeThemeId: backup.homeThemeId ?? themes[0].id,
-          focusThemeId: backup.focusThemeId ?? themes[1].id,
-          ambientThemeId: backup.ambientThemeId ?? themes[2].id,
+          homeThemeId: backup.homeThemeId ?? defaultThemeIds.home,
+          focusThemeId: backup.focusThemeId ?? defaultThemeIds.focus,
+          ambientThemeId: backup.ambientThemeId ?? defaultThemeIds.ambient,
           activeSoundId: backup.activeSoundId ?? null,
           soundVolume: backup.soundVolume ?? 0.35,
           completedFocusCount: backup.completedFocusCount ?? 0,
@@ -752,9 +752,9 @@ export const useAppStore = create<AppState>()(
         return {
           ...current,
           ...p,
-          homeThemeId: resolveId(p.homeThemeId, current.homeThemeId),
-          focusThemeId: resolveId(p.focusThemeId, current.focusThemeId),
-          ambientThemeId: resolveId(p.ambientThemeId, current.ambientThemeId),
+          homeThemeId: resolveId(p.homeThemeId, defaultThemeIds.home),
+          focusThemeId: resolveId(p.focusThemeId, defaultThemeIds.focus),
+          ambientThemeId: resolveId(p.ambientThemeId, defaultThemeIds.ambient),
           settings: { ...current.settings, ...p.settings },
           timerSettings: { ...current.timerSettings, ...p.timerSettings },
           tasks: (p.tasks ?? current.tasks).map((t) => normalizeTask(t)),

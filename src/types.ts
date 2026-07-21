@@ -30,7 +30,7 @@ export interface Task {
   completedAt: number | null
 }
 
-export type ThemeCategory = 'desk' | 'cafe' | 'library' | 'office'
+export type ThemeCategory = 'nature' | 'cafe' | 'library' | 'office'
 
 export type AmbientSoundKind =
   | 'rain'
@@ -57,6 +57,8 @@ export interface Theme {
   /** Looping ambient video (mp4/webm URL or YouTube URL) */
   video?: string
   animated?: boolean
+  /** Curation note describing the subtle motion */
+  motion?: string
 }
 
 export interface AmbientSound {

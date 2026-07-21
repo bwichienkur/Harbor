@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { themes } from '../../data/themes'
-import type { DashMode } from '../../types'
+import { themeCategories, themes } from '../../data/themes'
+import type { DashMode, ThemeCategory } from '../../types'
 import { useAppStore } from '../../store/useAppStore'
 
-type ThemeFilter = 'all' | 'cafe' | 'desk' | 'office'
+type ThemeFilter = 'all' | ThemeCategory
 
 export function ThemesPanel() {
   const mode = useAppStore((s) => s.mode)
@@ -35,19 +35,19 @@ export function ThemesPanel() {
   return (
     <div className="panel-section">
       <p className="helper">
-        Scenic animated workspaces for <strong>{slot}</strong> — real places, soft motion, fixed
-        camera.
+        Ambient worlds for <strong>{slot}</strong> — subtle motion that stays behind your work.
+        Fixed camera, soft loops, never competing for attention.
       </p>
 
       <div className="eta-row">
-        {(['all', 'cafe', 'desk', 'office'] as const).map((f) => (
+        {themeCategories.map((f) => (
           <button
-            key={f}
+            key={f.id}
             type="button"
-            className={`chip ${filter === f ? 'active' : ''}`}
-            onClick={() => setFilter(f)}
+            className={`chip ${filter === f.id ? 'active' : ''}`}
+            onClick={() => setFilter(f.id)}
           >
-            {f === 'all' ? 'All' : f === 'cafe' ? 'Cafés' : f === 'desk' ? 'Desks' : 'Offices'}
+            {f.label}
           </button>
         ))}
       </div>
@@ -125,6 +125,7 @@ export function ThemesPanel() {
               key={theme.id}
               type="button"
               className={`theme-card ${applied ? 'active' : ''} theme-card-live`}
+              title={theme.motion}
               onClick={() => {
                 setCustomBackground(null)
                 updateSettings({ [videoKey]: '' })
