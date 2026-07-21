@@ -117,6 +117,8 @@ export interface AppState {
   resetTimerLayout: () => void
   setTaskDockLayout: (layout: TaskDockLayout) => void
   resetTaskDockLayout: () => void
+  /** Clear filled session tally icons (pomodoro cycle count). */
+  resetFocusSessions: () => void
   setActiveTask: (id: string | null) => void
   setRoom: (patch: Partial<StudyRoomState>) => void
   applyRoomSnapshot: (snapshot: RoomTimerSnapshot) => void
@@ -312,6 +314,7 @@ export const useAppStore = create<AppState>()(
       resetTimerLayout: () => set({ timerLayout: null }),
       setTaskDockLayout: (layout) => set({ taskDockLayout: layout }),
       resetTaskDockLayout: () => set({ taskDockLayout: null }),
+      resetFocusSessions: () => set({ completedFocusCount: 0 }),
       setActiveTask: (id) => set({ activeTaskId: id }),
 
       addTask: (text, opts = {}) => {

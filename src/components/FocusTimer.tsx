@@ -1,5 +1,6 @@
 import {
   GripVertical,
+  ListRestart,
   Lock,
   LockOpen,
   Maximize2,
@@ -59,6 +60,7 @@ export function FocusTimer() {
   const skipPhase = useAppStore((s) => s.skipPhase)
   const setTimerLayout = useAppStore((s) => s.setTimerLayout)
   const resetTimerLayout = useAppStore((s) => s.resetTimerLayout)
+  const resetFocusSessions = useAppStore((s) => s.resetFocusSessions)
   const clearMode = useAppStore((s) => s.clearMode)
   const toggleClearMode = useAppStore((s) => s.toggleClearMode)
   const lockTimerPosition = useAppStore((s) => s.settings.lockTimerPosition)
@@ -194,7 +196,21 @@ export function FocusTimer() {
         <span className="drag-grip" aria-hidden>
           <GripVertical size={18} strokeWidth={2} />
         </span>
-        <SessionTally scale={scale} />
+        <div className="session-tally-row">
+          <SessionTally scale={scale} />
+          {!guestLocked && (
+            <button
+              type="button"
+              className="timer-reset-pos timer-chrome"
+              title="Reset session tally"
+              aria-label="Reset session tally icons"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => resetFocusSessions()}
+            >
+              <ListRestart size={15} />
+            </button>
+          )}
+        </div>
         <div className="timer-drag-actions timer-chrome">
           <button
             type="button"

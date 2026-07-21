@@ -1346,6 +1346,14 @@ button {
 }
 
 /* Session tally icons (Flocus-style filled pips) */
+.session-tally-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(0.35rem * var(--timer-scale, 1));
+  justify-self: center;
+}
+
 .session-tally {
   display: inline-flex;
   align-items: center;
