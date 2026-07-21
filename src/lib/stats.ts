@@ -1,4 +1,4 @@
-import type { FocusSession, Task } from '../types'
+import type { FocusSession, Task, TimerPhase } from '../types'
 import { etaToMinutes } from './format'
 
 function startOfDay(d: Date) {
@@ -68,6 +68,43 @@ export function weekBars(sessions: FocusSession[], now = new Date()) {
 
 export function plannedMinutes(tasks: Task[]) {
   return tasks.filter((t) => !t.done).reduce((sum, t) => sum + etaToMinutes(t.eta), 0)
+}
+
+/** Focus ms already logged against a task (completed sessions only). */
+export function taskLoggedMs(sessions: FocusSession[], taskId: string) {
+  return sessions
+    .filter((s) => s.phase === 'focus' && s.taskId === taskId)
+    .reduce((acc, s) => acc + Math.max(0, s.durationMs), 0)
+}
+
+type LiveFocusSlice = {
+  phase: TimerPhase
+  focusStartedAt: number | null
+  activeTaskId: string | null
+  now?: number
+}
+
+/** Logged focus ms + live focus slice when this task is currently being worked. */
+export function taskSpentMs(
+  sessions: FocusSession[],
+  taskId: string,
+  live?: LiveFocusSlice,
+) {
+  let ms = taskLoggedMs(sessions, taskId)
+  if (
+    live &&
+    live.phase === 'focus' &&
+    live.focusStartedAt &&
+    live.activeTaskId === taskId
+  ) {
+    ms += Math.max(0, (live.now ?? Date.now()) - live.focusStartedAt)
+  }
+  return ms
+}
+
+export function taskProgressRatio(spentMs: number, etaMinutes: number) {
+  const etaMs = Math.max(1, etaMinutes) * 60_000
+  return Math.min(1, Math.max(0, spentMs / etaMs))
 }
 
 export function sessionsToCsv(sessions: FocusSession[]) {

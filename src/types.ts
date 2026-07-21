@@ -68,6 +68,20 @@ export interface AmbientSound {
   kind: AmbientSoundKind
 }
 
+export type MusicSource = 'youtube' | 'spotify'
+export type MusicMood = 'deep' | 'chill' | 'classical' | 'ambient' | 'jazz'
+
+export interface MusicPlaylist {
+  id: string
+  title: string
+  blurb: string
+  source: MusicSource
+  url: string
+  mood: MusicMood
+  /** User-pinned custom entry (not from curated catalog). */
+  custom?: boolean
+}
+
 export interface SoundLayerState {
   id: AmbientSoundKind
   enabled: boolean
@@ -209,4 +223,8 @@ export interface HarborBackup {
   /** Active layout template id, or `"custom"` when freeform. */
   activeLayoutTemplateId: string
   customLayoutTemplates: WidgetLayoutTemplate[]
+  /** Curated playlist ids the user pinned. */
+  pinnedPlaylistIds: string[]
+  /** User-saved custom playlists (from paste or pin-current). */
+  customPlaylists: MusicPlaylist[]
 }

@@ -12,6 +12,7 @@ import type {
   DashMode,
   FocusSession,
   HarborBackup,
+  MusicPlaylist,
   SessionIconShape,
   SoundLayerState,
   StudyRoomState,
@@ -119,6 +120,8 @@ export interface AppState {
   room: StudyRoomState
   /** Ephemeral hover preview for session tally icons (not persisted). */
   sessionIconPreview: SessionIconShape | null
+  pinnedPlaylistIds: string[]
+  customPlaylists: MusicPlaylist[]
 
   setMode: (mode: DashMode) => void
   setPanel: (panel: AppState['panel']) => void
@@ -126,6 +129,10 @@ export interface AppState {
   toggleClearMode: () => void
   setMiniTimer: (on: boolean) => void
   setSessionIconPreview: (shape: SessionIconShape | null) => void
+  togglePinnedPlaylist: (id: string) => void
+  pinCustomPlaylist: (playlist: Omit<MusicPlaylist, 'id' | 'custom'> & { id?: string }) => void
+  removeCustomPlaylist: (id: string) => void
+  applyMusicPlaylist: (playlist: MusicPlaylist) => void
   updateSettings: (patch: Partial<AppSettings>) => void
   updateTimerSettings: (patch: Partial<TimerSettings>) => void
   setTheme: (slot: 'home' | 'focus' | 'ambient', themeId: string) => void
@@ -290,6 +297,8 @@ export const useAppStore = create<AppState>()(
       clearMode: false,
       miniTimer: false,
       sessionIconPreview: null,
+      pinnedPlaylistIds: [],
+      customPlaylists: [],
       room: {
         code: null,
         role: null,
@@ -307,6 +316,51 @@ export const useAppStore = create<AppState>()(
       },
       setMiniTimer: (on) => set({ miniTimer: on }),
       setSessionIconPreview: (shape) => set({ sessionIconPreview: shape }),
+      togglePinnedPlaylist: (id) =>
+        set((s) => ({
+          pinnedPlaylistIds: s.pinnedPlaylistIds.includes(id)
+            ? s.pinnedPlaylistIds.filter((x) => x !== id)
+            : [...s.pinnedPlaylistIds, id],
+        })),
+      pinCustomPlaylist: (playlist) =>
+        set((s) => {
+          const id = playlist.id ?? uid()
+          const entry: MusicPlaylist = {
+            id,
+            title: playlist.title.trim() || 'Pinned playlist',
+            blurb: playlist.blurb || 'Saved from Music',
+            source: playlist.source,
+            url: playlist.url.trim(),
+            mood: playlist.mood,
+            custom: true,
+          }
+          if (!entry.url) return s
+          const exists = s.customPlaylists.some(
+            (p) => p.url === entry.url || p.id === entry.id,
+          )
+          if (exists) {
+            return {
+              customPlaylists: s.customPlaylists.map((p) =>
+                p.url === entry.url || p.id === entry.id ? { ...p, ...entry, custom: true } : p,
+              ),
+            }
+          }
+          return { customPlaylists: [entry, ...s.customPlaylists] }
+        }),
+      removeCustomPlaylist: (id) =>
+        set((s) => ({
+          customPlaylists: s.customPlaylists.filter((p) => p.id !== id),
+          pinnedPlaylistIds: s.pinnedPlaylistIds.filter((x) => x !== id),
+        })),
+      applyMusicPlaylist: (playlist) =>
+        set((s) => ({
+          settings: {
+            ...s.settings,
+            ...(playlist.source === 'youtube'
+              ? { youtubeUrl: playlist.url }
+              : { spotifyUrl: playlist.url }),
+          },
+        })),
       updateSettings: (patch) =>
         set((s) => ({ settings: { ...s.settings, ...patch } })),
       setRoom: (patch) => set((s) => ({ room: { ...s.room, ...patch } })),
@@ -715,6 +769,8 @@ export const useAppStore = create<AppState>()(
           soundPresets: s.soundPresets,
           activeLayoutTemplateId: s.activeLayoutTemplateId,
           customLayoutTemplates: s.customLayoutTemplates,
+          pinnedPlaylistIds: s.pinnedPlaylistIds,
+          customPlaylists: s.customPlaylists,
         }
       },
 
@@ -739,6 +795,8 @@ export const useAppStore = create<AppState>()(
           soundPresets: backup.soundPresets ?? [],
           activeLayoutTemplateId: backup.activeLayoutTemplateId ?? 'custom',
           customLayoutTemplates: backup.customLayoutTemplates ?? [],
+          pinnedPlaylistIds: backup.pinnedPlaylistIds ?? [],
+          customPlaylists: backup.customPlaylists ?? [],
         })
       },
     }),
@@ -771,6 +829,8 @@ export const useAppStore = create<AppState>()(
           soundPresets: p.soundPresets ?? current.soundPresets,
           customLayoutTemplates: p.customLayoutTemplates ?? current.customLayoutTemplates,
           activeLayoutTemplateId: p.activeLayoutTemplateId ?? current.activeLayoutTemplateId,
+          pinnedPlaylistIds: p.pinnedPlaylistIds ?? current.pinnedPlaylistIds,
+          customPlaylists: p.customPlaylists ?? current.customPlaylists,
         }
       },
       partialize: (s) => ({
@@ -793,6 +853,8 @@ export const useAppStore = create<AppState>()(
         clockLayout: s.clockLayout,
         activeLayoutTemplateId: s.activeLayoutTemplateId,
         customLayoutTemplates: s.customLayoutTemplates,
+        pinnedPlaylistIds: s.pinnedPlaylistIds,
+        customPlaylists: s.customPlaylists,
         clearMode: s.clearMode,
         activeTaskId: s.activeTaskId,
         mode: s.mode,

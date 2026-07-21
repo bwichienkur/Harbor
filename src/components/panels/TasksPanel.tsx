@@ -5,6 +5,7 @@ import { plannedMinutes } from '../../lib/stats'
 import type { TaskColor, TaskRecurrence } from '../../types'
 import { useAppStore } from '../../store/useAppStore'
 import { SelectMenu } from '../SelectMenu'
+import { TaskProgressBar } from '../TaskProgressBar'
 
 const colors: TaskColor[] = ['sage', 'sand', 'coral', 'sky', 'lilac', 'slate']
 const recurrences: { id: TaskRecurrence; label: string }[] = [
@@ -195,6 +196,7 @@ export function TasksPanel() {
                   {task.eta ? formatEtaMinutes(task.eta) : 'No ETA'}
                   {task.tags.length ? ` · ${task.tags.join(', ')}` : ''}
                 </small>
+                {task.eta ? <TaskProgressBar task={task} /> : null}
               </button>
               <div className="task-move">
                 <button

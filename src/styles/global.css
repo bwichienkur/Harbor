@@ -1109,6 +1109,197 @@ button {
   max-height: 352px;
 }
 
+.music-section {
+  gap: 0.65rem;
+}
+
+.playlist-grid {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.playlist-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem;
+  align-items: stretch;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+}
+
+.playlist-card.active {
+  border-color: rgba(125, 184, 168, 0.55);
+  background: rgba(125, 184, 168, 0.12);
+}
+
+.playlist-card-main {
+  display: grid;
+  gap: 0.2rem;
+  text-align: left;
+  padding: 0.7rem 0.8rem;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.playlist-card-main strong {
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+}
+
+.playlist-card-main span {
+  color: var(--ink-mute);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.playlist-source,
+.playlist-mood {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.playlist-mood {
+  color: var(--ink-mute);
+}
+
+.playlist-pin {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  border: none;
+  border-left: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--ink-mute);
+  cursor: pointer;
+}
+
+.playlist-pin:hover,
+.playlist-pin.on {
+  color: var(--accent);
+  background: rgba(125, 184, 168, 0.1);
+}
+
+.task-progress {
+  display: grid;
+  gap: 0.25rem;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.task-progress.compact {
+  gap: 0.15rem;
+  margin-top: 0.2rem;
+}
+
+.task-progress-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.task-progress.compact .task-progress-track {
+  height: 5px;
+}
+
+.task-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent-strong), var(--accent));
+  transition: width 0.35s ease;
+}
+
+.task-progress.over .task-progress-fill {
+  background: linear-gradient(90deg, #c98a5a, #e07a6a);
+}
+
+.task-progress-label {
+  color: var(--ink-mute);
+  font-size: 0.72rem;
+}
+
+.timer-task-progress {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+  width: min(100%, 16rem);
+}
+
+.timer-task-progress .task-progress {
+  width: 100%;
+}
+
+.task-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.65rem;
+  align-items: start;
+  padding: 0.65rem 0.7rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.task-row.color-sage { border-left: 3px solid #7db8a8; }
+.task-row.color-sand { border-left: 3px solid #d2b48c; }
+.task-row.color-coral { border-left: 3px solid #e07a6a; }
+.task-row.color-sky { border-left: 3px solid #7eb6d6; }
+.task-row.color-lilac { border-left: 3px solid #b39bc8; }
+.task-row.color-slate { border-left: 3px solid #8a9399; }
+
+.task-check {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.2rem;
+  border-radius: 5px;
+  border: 1.5px solid rgba(244, 241, 234, 0.45);
+  background: transparent;
+  cursor: pointer;
+}
+
+.task-check.checked {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+
+.task-main {
+  display: grid;
+  gap: 0.15rem;
+  text-align: left;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.task-main.active span {
+  color: var(--accent);
+}
+
+.task-main span {
+  font-weight: 600;
+}
+
+.task-main small {
+  color: var(--ink-mute);
+  font-size: 0.78rem;
+}
+
+.task-move {
+  display: grid;
+  gap: 0.2rem;
+}
+
 .helper {
   color: var(--ink-mute);
   font-size: 0.85rem;

@@ -20,6 +20,7 @@ import {
 } from '../store/useAppStore'
 import type { TimerLayout } from '../types'
 import { SessionTally } from './SessionTally'
+import { TaskProgressBar } from './TaskProgressBar'
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n))
@@ -277,7 +278,12 @@ export function FocusTimer() {
         </div>
       </div>
 
-      {topTask && <div className="timer-meta text-scrim">{topTask.text}</div>}
+      {topTask && (
+        <div className="timer-task-progress text-scrim">
+          <div className="timer-meta">{topTask.text}</div>
+          {topTask.eta ? <TaskProgressBar task={topTask} compact /> : null}
+        </div>
+      )}
       {guestLocked && <div className="timer-meta text-scrim">Following room host</div>}
 
       <div className={`timer-controls ${running ? 'timer-chrome' : ''}`}>

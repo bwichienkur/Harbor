@@ -1,6 +1,5 @@
 import { CheckSquare, GripVertical, Plus, RotateCcw } from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { formatEtaMinutes } from '../lib/format'
 import {
   DEFAULT_TASK_DOCK_HEIGHT,
   DEFAULT_TASK_DOCK_WIDTH,
@@ -11,6 +10,7 @@ import {
   useAppStore,
 } from '../store/useAppStore'
 import type { TaskDockLayout } from '../types'
+import { TaskProgressBar } from './TaskProgressBar'
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n))
@@ -212,13 +212,13 @@ export function FocusTaskDock() {
                   aria-label={task.done ? 'Mark incomplete' : 'Complete task'}
                   onClick={() => toggleTask(task.id)}
                 />
-                <button
+                  <button
                   type="button"
                   className="focus-task-main"
                   onClick={() => setActiveTask(task.id)}
                 >
                   <span>{task.text}</span>
-                  {task.eta ? <small>{formatEtaMinutes(task.eta)}</small> : null}
+                  {task.eta ? <TaskProgressBar task={task} compact /> : null}
                 </button>
               </li>
             ))}
