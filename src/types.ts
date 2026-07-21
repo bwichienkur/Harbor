@@ -98,6 +98,8 @@ export interface AppSettings {
   siteFont: string
   /** Any Google Font / system font family name when `siteFont` is `"custom"`. */
   customFont: string
+  /** Keep the screen awake with Wake Lock while the timer is running. */
+  keepAwakeWhileRunning: boolean
 }
 
 export interface StudyRoomState {

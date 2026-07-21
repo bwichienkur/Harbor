@@ -164,6 +164,17 @@ export function SettingsPanel() {
             onToggle={() => updateSettings({ lockTimerPosition: !settings.lockTimerPosition })}
           />
           <Toggle
+            label="Keep screen awake while timer runs"
+            on={settings.keepAwakeWhileRunning}
+            onToggle={() =>
+              updateSettings({ keepAwakeWhileRunning: !settings.keepAwakeWhileRunning })
+            }
+          />
+          <p className="helper">
+            Uses the browser Wake Lock API so the display stays on during a session. Some browsers
+            or OS power settings may still sleep the machine.
+          </p>
+          <Toggle
             label="Complete active task when focus ends"
             on={settings.completeTaskOnFocusEnd}
             onToggle={() =>

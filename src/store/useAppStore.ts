@@ -188,6 +188,7 @@ const defaultSettings: AppSettings = {
   autoOverlay: true,
   siteFont: 'Manrope',
   customFont: '',
+  keepAwakeWhileRunning: true,
 }
 
 function nextPhase(
