@@ -97,3 +97,36 @@ export function fontStackFor(family: string) {
   }
   return `"${name}", system-ui, sans-serif`
 }
+
+const SITE_FONT_LINK_ID = 'harbor-site-font'
+
+function ensureSiteFontLink(href: string) {
+  let link = document.getElementById(SITE_FONT_LINK_ID) as HTMLLinkElement | null
+  if (!href) {
+    link?.remove()
+    return
+  }
+  if (!link) {
+    link = document.createElement('link')
+    link.id = SITE_FONT_LINK_ID
+    link.rel = 'stylesheet'
+    document.head.appendChild(link)
+  }
+  if (link.href !== href) link.href = href
+}
+
+/** Apply a font family to the whole app via CSS variables (and load Google Fonts if needed). */
+export function applySiteFontFamily(family: string) {
+  const stack = fontStackFor(family)
+  const root = document.documentElement
+  root.style.setProperty('--font-body', stack)
+  root.style.setProperty('--font-display', stack)
+  root.style.setProperty('--font-time', stack)
+  root.dataset.siteFont = family.trim() || 'Manrope'
+
+  if (isSystemFont(family)) {
+    ensureSiteFontLink('')
+    return
+  }
+  ensureSiteFontLink(googleFontStylesheetUrl(family))
+}

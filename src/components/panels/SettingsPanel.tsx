@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { fontStackFor, siteFontPresets } from '../../data/fonts'
+import { applySiteFontFamily, resolveSiteFontFamily, siteFontPresets } from '../../data/fonts'
 import { allLayoutTemplates } from '../../data/layoutTemplates'
 import { playChime } from '../../lib/audio'
 import { requestNotificationPermission } from '../../lib/notifications'
@@ -44,7 +44,6 @@ export function SettingsPanel() {
   const taskDockLayout = useAppStore((s) => s.taskDockLayout)
   const [tab, setTab] = useState<Tab>('general')
   const [layoutName, setLayoutName] = useState('')
-  const [fontHover, setFontHover] = useState<string | null>(null)
 
   const layouts = allLayoutTemplates(customLayoutTemplates)
   const canSaveLayout = Boolean(timerLayout && clockLayout && taskDockLayout)
@@ -59,13 +58,17 @@ export function SettingsPanel() {
     [],
   )
 
-  const previewSource =
-    fontHover && fontHover !== 'custom'
-      ? fontHover
-      : settings.siteFont === 'custom'
-        ? settings.customFont.trim() || 'Manrope'
-        : settings.siteFont
-  const previewFontFamily = fontStackFor(previewSource)
+  const restoreSiteFont = () => {
+    applySiteFontFamily(resolveSiteFontFamily(settings.siteFont, settings.customFont))
+  }
+
+  const previewFontOnHover = (value: string | null) => {
+    if (!value || value === 'custom') {
+      restoreSiteFont()
+      return
+    }
+    applySiteFontFamily(value)
+  }
 
   return (
     <div className="panel-section">
@@ -135,7 +138,7 @@ export function SettingsPanel() {
               options={fontOptions}
               preloadFonts
               onChange={(siteFont) => updateSettings({ siteFont })}
-              onHoverOption={setFontHover}
+              onHoverOption={previewFontOnHover}
             />
           </div>
           {settings.siteFont === 'custom' && (
@@ -152,11 +155,6 @@ export function SettingsPanel() {
                 app.
               </p>
             </div>
-          )}
-          {(settings.siteFont !== 'custom' || settings.customFont.trim()) && (
-            <p className="font-preview" style={{ fontFamily: previewFontFamily }}>
-              Preview · Harbor Focus · 25:00
-            </p>
           )}
           <div className="field">
             <label htmlFor="session-icon">Session tally icon</label>
