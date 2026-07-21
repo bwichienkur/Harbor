@@ -36,7 +36,8 @@ export function ThemesPanel() {
     <div className="panel-section">
       <p className="helper">
         Ambient worlds for <strong>{slot}</strong> — subtle motion that stays behind your work.
-        Fixed camera, soft loops, never competing for attention.
+        Fixed camera, soft loops, never competing for attention. Lower overlay to keep Mixkit
+        colors closer to the original.
       </p>
 
       <div className="eta-row">
@@ -53,12 +54,17 @@ export function ThemesPanel() {
       </div>
 
       <div className="field">
-        <label htmlFor="overlay">Overlay strength · {Math.round(overlayStrength * 100)}%</label>
+        <label htmlFor="overlay">
+          Overlay strength · {Math.round(overlayStrength * 100)}%
+          <span className="helper" style={{ display: 'block', marginTop: '0.2rem' }}>
+            Lower = more vibrant theme colors · Higher = stronger readability veil
+          </span>
+        </label>
         <input
           id="overlay"
           type="range"
-          min={0.15}
-          max={0.8}
+          min={0.05}
+          max={0.65}
           step={0.01}
           value={overlayStrength}
           onChange={(e) => updateSettings({ overlayStrength: Number(e.target.value) })}

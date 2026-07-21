@@ -29,7 +29,8 @@ function defineTheme(draft: ThemeDraft): Theme {
     id: draft.id,
     name: draft.name,
     category: draft.category,
-    overlay: draft.overlay,
+    // Keep catalog overlays light so Mixkit color stays vivid under the veil
+    overlay: Math.min(0.3, Math.round(draft.overlay * 0.55 * 100) / 100),
     image,
     video,
     animated: true,
@@ -46,6 +47,14 @@ const drafts: ThemeDraft[] = [
     overlay: 0.4,
     media: mixkit('2738'),
     motion: 'Soft rain around a quiet cabin roof',
+  },
+  {
+    id: 'cabin-by-the-river',
+    name: 'Cabin by the River',
+    category: 'nature',
+    overlay: 0.38,
+    media: mixkit('11145'),
+    motion: 'Woodland cabin beside a quiet flowing river',
   },
   {
     id: 'mountain-lake',

@@ -86,10 +86,13 @@ export function useActiveThemeMedia(forceMode?: 'home' | 'focus' | 'ambient') {
     }
   }, [image, hasVideo, autoOverlay])
 
-  const baseOverlay = customBackground ? overlayStrength : theme.overlay
-  const autoBoost = autoOverlay && !hasVideo ? Math.max(0, (brightness - 0.42) * 0.55) : 0
-  const videoBias = hasVideo ? -0.12 : -0.04
-  const overlay = Math.min(0.72, Math.max(0.12, baseOverlay + autoBoost + videoBias))
+  const baseOverlay = overlayStrength
+  // Per-theme bias around the catalog's light-overlay target (~0.22)
+  const themeBias = (theme.overlay - 0.22) * 0.45
+  const autoBoost = autoOverlay && !hasVideo ? Math.max(0, (brightness - 0.42) * 0.4) : 0
+  // Live video already needs less veil to stay close to the Mixkit source
+  const videoBias = hasVideo ? -0.1 : -0.02
+  const overlay = Math.min(0.58, Math.max(0.04, baseOverlay + themeBias + autoBoost + videoBias))
 
   return {
     theme,

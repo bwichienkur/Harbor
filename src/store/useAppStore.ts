@@ -202,7 +202,7 @@ const defaultSettings: AppSettings = {
   showTasksOnFocus: true,
   showClockOnFocus: true,
   sessionIconShape: 'heart',
-  overlayStrength: 0.45,
+  overlayStrength: 0.26,
   youtubeUrl: '',
   spotifyUrl: '',
   alertSound: true,
@@ -749,13 +749,22 @@ export const useAppStore = create<AppState>()(
         const themeIds = new Set(themes.map((t) => t.id))
         const resolveId = (id: string | undefined, fallback: string) =>
           id && themeIds.has(id) ? id : fallback
+        const persistedSettings = (p.settings ?? {}) as Partial<AppState['settings']>
+        const migratedOverlay =
+          persistedSettings.overlayStrength === 0.45
+            ? 0.26
+            : persistedSettings.overlayStrength
         return {
           ...current,
           ...p,
           homeThemeId: resolveId(p.homeThemeId, defaultThemeIds.home),
           focusThemeId: resolveId(p.focusThemeId, defaultThemeIds.focus),
           ambientThemeId: resolveId(p.ambientThemeId, defaultThemeIds.ambient),
-          settings: { ...current.settings, ...p.settings },
+          settings: {
+            ...current.settings,
+            ...persistedSettings,
+            ...(migratedOverlay !== undefined ? { overlayStrength: migratedOverlay } : {}),
+          },
           timerSettings: { ...current.timerSettings, ...p.timerSettings },
           tasks: (p.tasks ?? current.tasks).map((t) => normalizeTask(t)),
           soundLayers: p.soundLayers ?? current.soundLayers,
